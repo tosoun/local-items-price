@@ -33,11 +33,11 @@ if "records" not in st.session_state:
 if "current_barcode" not in st.session_state:
     st.session_state.current_barcode = None
 
-if "scanner_counter" not in st.session_state:
-    st.session_state.scanner_counter = 0
-
 if "last_saved" not in st.session_state:
     st.session_state.last_saved = False
+
+if "last_barcode" not in st.session_state:
+    st.session_state.last_barcode = None
 
 
 # ---------------------------------------------------------
@@ -51,61 +51,63 @@ st.caption(
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
+# SCANNER
+# ΠΑΝΤΑ ΙΔΙΟ KEY
+# ---------------------------------------------------------
+st.subheader("📷 Scanner")
+
+barcode_result = qrcode_scanner(
+    key="barcode_scanner"
+)
+
+
+# ---------------------------------------------------------
+# ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
 # ---------------------------------------------------------
 if st.session_state.last_saved:
 
-    st.success("✅ Η τιμή αποθηκεύτηκε.")
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
 
     if st.button(
         "📷 Νέο scan",
         type="primary",
         use_container_width=True
     ):
+
         st.session_state.last_saved = False
         st.session_state.current_barcode = None
-        st.session_state.scanner_counter += 1
 
         st.rerun()
 
 
 # ---------------------------------------------------------
-# SCANNER
+# ΕΛΕΓΧΟΣ BARCODE
 # ---------------------------------------------------------
-if not st.session_state.last_saved:
+elif barcode_result:
 
-    st.subheader("📷 Σκάναρε το barcode")
+    barcode = str(barcode_result).strip()
 
-    barcode_result = qrcode_scanner(
-        key=f"scanner_{st.session_state.scanner_counter}"
-    )
+    # Αποφεύγουμε συνεχή επανάληψη του ίδιου αποτελέσματος
+    if barcode != st.session_state.last_barcode:
 
+        st.session_state.last_barcode = barcode
 
-    # -----------------------------------------------------
-    # ΕΛΕΓΧΟΣ BARCODE
-    # -----------------------------------------------------
-    if barcode_result:
+        if barcode in PRODUCTS:
 
-        barcode = str(barcode_result).strip()
+            st.session_state.current_barcode = barcode
 
-        if barcode != st.session_state.current_barcode:
+            st.success(
+                "✅ Το προϊόν αναγνωρίστηκε!"
+            )
 
-            if barcode in PRODUCTS:
+        else:
 
-                st.session_state.current_barcode = barcode
+            st.session_state.current_barcode = None
 
-                st.success(
-                    "✅ Το προϊόν αναγνωρίστηκε!"
-                )
-
-            else:
-
-                st.session_state.current_barcode = None
-
-                st.error(
-                    f"⛔ Το barcode {barcode} "
-                    "δεν υπάρχει στη λίστα προϊόντων."
-                )
+            st.error(
+                f"⛔ Το barcode {barcode} "
+                "δεν υπάρχει στη λίστα προϊόντων."
+            )
 
 
 # ---------------------------------------------------------
@@ -139,7 +141,8 @@ if (
         "💶 Τιμή (€)",
         min_value=0.00,
         step=0.01,
-        format="%.2f"
+        format="%.2f",
+        key="price_input"
     )
 
 

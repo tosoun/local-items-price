@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 # ---------------------------------------------------------
-# ΡΥΘΜΙΣΕΙΣ
+# ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Καταγραφή Τιμών",
@@ -38,7 +38,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# SCANNER COMPONENT
+# CUSTOM SCANNER
 # ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
@@ -58,11 +58,11 @@ if "current_barcode" not in st.session_state:
 if "last_barcode" not in st.session_state:
     st.session_state.last_barcode = None
 
+if "scanner_counter" not in st.session_state:
+    st.session_state.scanner_counter = 0
+
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
-
-if "reset_token" not in st.session_state:
-    st.session_state.reset_token = 0
 
 if "saved_message" not in st.session_state:
     st.session_state.saved_message = False
@@ -79,11 +79,14 @@ st.caption(
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
+# ΜΗΝΥΜΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
-    st.success("✅ Η τιμή αποθηκεύτηκε!")
+    st.success(
+        "✅ Η τιμή αποθηκεύτηκε! "
+        "Ο scanner είναι έτοιμος για το επόμενο προϊόν."
+    )
 
     st.session_state.saved_message = False
 
@@ -94,14 +97,13 @@ if st.session_state.saved_message:
 st.subheader("📷 Scanner")
 
 barcode_result = barcode_scanner(
-    reset_token=st.session_state.reset_token,
-    key="barcode_scanner_main",
+    key=f"barcode_scanner_{st.session_state.scanner_counter}",
     default=None
 )
 
 
 # ---------------------------------------------------------
-# BARCODE
+# ΕΛΕΓΧΟΣ BARCODE
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -111,6 +113,10 @@ if barcode_result:
 
         st.session_state.last_barcode = barcode
 
+
+        # -------------------------------------------------
+        # ΓΝΩΣΤΟ ΠΡΟΪΟΝ
+        # -------------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
@@ -119,6 +125,10 @@ if barcode_result:
                 "✅ Το προϊόν αναγνωρίστηκε!"
             )
 
+
+        # -------------------------------------------------
+        # ΑΓΝΩΣΤΟ ΠΡΟΪΟΝ
+        # -------------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -130,29 +140,48 @@ if barcode_result:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ / MARKET / ΤΙΜΗ
+# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
     barcode = st.session_state.current_barcode
+
     product = PRODUCTS[barcode]
+
 
     st.divider()
 
-    st.subheader("🛒 Προϊόν")
 
-    st.markdown(f"### {product}")
+    # -----------------------------------------------------
+    # ΠΡΟΪΟΝ
+    # -----------------------------------------------------
+    st.subheader(
+        "🛒 Προϊόν"
+    )
 
-    st.write(f"**Barcode:** {barcode}")
+    st.markdown(
+        f"### {product}"
+    )
+
+    st.write(
+        f"**Barcode:** {barcode}"
+    )
 
 
+    # -----------------------------------------------------
+    # MARKET
+    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Επιλογή Market",
         MARKETS,
+        index=0,
         key=f"market_{st.session_state.entry_counter}"
     )
 
 
+    # -----------------------------------------------------
+    # ΤΙΜΗ
+    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -162,6 +191,9 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # ΑΠΟΘΗΚΕΥΣΗ
+    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -174,10 +206,15 @@ if st.session_state.current_barcode:
                 "⚠️ Γράψε πρώτα την τιμή."
             )
 
+
         else:
 
             now = datetime.now()
 
+
+            # ---------------------------------------------
+            # ΑΠΟΘΗΚΕΥΣΗ ΕΓΓΡΑΦΗΣ
+            # ---------------------------------------------
             st.session_state.records.append(
                 {
                     "Ημερομηνία":
@@ -201,17 +238,38 @@ if st.session_state.current_barcode:
             )
 
 
-            # Καθαρίζουμε την τρέχουσα καταχώρηση
+            # ---------------------------------------------
+            # ΚΑΘΑΡΙΣΜΟΣ ΠΡΟΗΓΟΥΜΕΝΟΥ SCAN
+            # ---------------------------------------------
             st.session_state.current_barcode = None
+
             st.session_state.last_barcode = None
 
+
+            # ---------------------------------------------
+            # ΝΕΑ ΠΕΔΙΑ MARKET / ΤΙΜΗΣ
+            # ---------------------------------------------
             st.session_state.entry_counter += 1
 
-            # Εντολή στον scanner να ξεκλειδώσει
-            st.session_state.reset_token += 1
 
+            # ---------------------------------------------
+            # ΣΗΜΑΝΤΙΚΟ:
+            # ΑΛΛΑΖΟΥΜΕ ΤΟ KEY ΤΟΥ SCANNER
+            # ΩΣΤΕ ΝΑ ΞΑΝΑΦΟΡΤΩΘΕΙ
+            # ---------------------------------------------
+            st.session_state.scanner_counter += 1
+
+
+            # ---------------------------------------------
+            # ΜΗΝΥΜΑ ΕΠΙΤΥΧΙΑΣ
+            # ---------------------------------------------
             st.session_state.saved_message = True
 
+
+            # ---------------------------------------------
+            # RELOAD
+            # Ο SCANNER ΞΑΝΑΝΟΙΓΕΙ
+            # ---------------------------------------------
             st.rerun()
 
 
@@ -222,11 +280,15 @@ if st.session_state.records:
 
     st.divider()
 
-    st.subheader("📋 Καταχωρήσεις")
+    st.subheader(
+        "📋 Καταχωρήσεις"
+    )
+
 
     df = pd.DataFrame(
         st.session_state.records
     )
+
 
     st.dataframe(
         df,
@@ -236,9 +298,10 @@ if st.session_state.records:
 
 
     # -----------------------------------------------------
-    # EXCEL
+    # ΔΗΜΙΟΥΡΓΙΑ EXCEL
     # -----------------------------------------------------
     output = BytesIO()
+
 
     with pd.ExcelWriter(
         output,
@@ -252,6 +315,9 @@ if st.session_state.records:
         )
 
 
+    # -----------------------------------------------------
+    # DOWNLOAD EXCEL
+    # -----------------------------------------------------
     st.download_button(
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),

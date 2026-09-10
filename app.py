@@ -38,7 +38,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# CUSTOM BARCODE SCANNER
+# CUSTOM SCANNER
 # ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
@@ -58,14 +58,11 @@ if "current_barcode" not in st.session_state:
 if "last_barcode" not in st.session_state:
     st.session_state.last_barcode = None
 
-if "last_saved" not in st.session_state:
-    st.session_state.last_saved = False
+if "scanner_counter" not in st.session_state:
+    st.session_state.scanner_counter = 0
 
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
-
-if "scanner_counter" not in st.session_state:
-    st.session_state.scanner_counter = 0
 
 
 # ---------------------------------------------------------
@@ -79,77 +76,49 @@ st.caption(
 
 
 # ---------------------------------------------------------
-# ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
-# ---------------------------------------------------------
-if st.session_state.last_saved:
-
-    st.success("✅ Η τιμή αποθηκεύτηκε!")
-
-    if st.button(
-        "📷 Νέο scan",
-        type="primary",
-        use_container_width=True
-    ):
-
-        st.session_state.last_saved = False
-        st.session_state.current_barcode = None
-        st.session_state.last_barcode = None
-
-        st.session_state.entry_counter += 1
-        st.session_state.scanner_counter += 1
-
-        st.rerun()
-
-
-# ---------------------------------------------------------
 # SCANNER
 # ---------------------------------------------------------
-if not st.session_state.last_saved:
+st.subheader("📷 Scanner")
 
-    st.subheader("📷 Scanner")
-
-    barcode_result = barcode_scanner(
-        key=f"barcode_scanner_{st.session_state.scanner_counter}",
-        default=None
-    )
+barcode_result = barcode_scanner(
+    key=f"barcode_scanner_{st.session_state.scanner_counter}",
+    default=None
+)
 
 
-    # -----------------------------------------------------
-    # ΕΛΕΓΧΟΣ BARCODE
-    # -----------------------------------------------------
-    if barcode_result:
+# ---------------------------------------------------------
+# ΕΛΕΓΧΟΣ BARCODE
+# ---------------------------------------------------------
+if barcode_result:
 
-        barcode = str(barcode_result).strip()
+    barcode = str(barcode_result).strip()
 
-        if barcode != st.session_state.last_barcode:
+    if barcode != st.session_state.last_barcode:
 
-            st.session_state.last_barcode = barcode
+        st.session_state.last_barcode = barcode
 
-            if barcode in PRODUCTS:
+        if barcode in PRODUCTS:
 
-                st.session_state.current_barcode = barcode
+            st.session_state.current_barcode = barcode
 
-                st.success(
-                    "✅ Το προϊόν αναγνωρίστηκε!"
-                )
+            st.success(
+                "✅ Το προϊόν αναγνωρίστηκε!"
+            )
 
-            else:
+        else:
 
-                st.session_state.current_barcode = None
+            st.session_state.current_barcode = None
 
-                st.error(
-                    f"⛔ Το barcode {barcode} "
-                    "δεν υπάρχει στη λίστα προϊόντων."
-                )
+            st.error(
+                f"⛔ Το barcode {barcode} "
+                "δεν υπάρχει στη λίστα προϊόντων."
+            )
 
 
 # ---------------------------------------------------------
 # ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
-if (
-    st.session_state.current_barcode
-    and not st.session_state.last_saved
-):
+if st.session_state.current_barcode:
 
     barcode = st.session_state.current_barcode
     product = PRODUCTS[barcode]
@@ -167,20 +136,13 @@ if (
     )
 
 
-    # -----------------------------------------------------
-    # MARKET
-    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Επιλογή Market",
         MARKETS,
-        index=0,
         key=f"market_{st.session_state.entry_counter}"
     )
 
 
-    # -----------------------------------------------------
-    # ΤΙΜΗ
-    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -190,9 +152,6 @@ if (
     )
 
 
-    # -----------------------------------------------------
-    # ΑΠΟΘΗΚΕΥΣΗ
-    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -211,17 +170,35 @@ if (
 
             st.session_state.records.append(
                 {
-                    "Ημερομηνία": now.strftime("%d/%m/%Y"),
-                    "Ώρα": now.strftime("%H:%M"),
-                    "Market": market,
-                    "Barcode": barcode,
-                    "Προϊόν": product,
-                    "Τιμή": price,
+                    "Ημερομηνία":
+                        now.strftime("%d/%m/%Y"),
+
+                    "Ώρα":
+                        now.strftime("%H:%M"),
+
+                    "Market":
+                        market,
+
+                    "Barcode":
+                        barcode,
+
+                    "Προϊόν":
+                        product,
+
+                    "Τιμή":
+                        price,
                 }
             )
 
             st.session_state.current_barcode = None
-            st.session_state.last_saved = True
+            st.session_state.last_barcode = None
+
+            st.session_state.entry_counter += 1
+            st.session_state.scanner_counter += 1
+
+            st.success(
+                "✅ Η τιμή αποθηκεύτηκε."
+            )
 
             st.rerun()
 
@@ -246,9 +223,6 @@ if st.session_state.records:
     )
 
 
-    # -----------------------------------------------------
-    # EXCEL
-    # -----------------------------------------------------
     output = BytesIO()
 
     with pd.ExcelWriter(
@@ -262,13 +236,11 @@ if st.session_state.records:
             sheet_name="Τιμές"
         )
 
+
     st.download_button(
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )

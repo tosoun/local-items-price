@@ -165,7 +165,6 @@ body {
 
 /* =====================================================
    ΕΠΙΚΟΙΝΩΝΙΑ ΜΕ STREAMLIT
-   ΧΩΡΙΣ streamlit-component-lib
 ===================================================== */
 
 function sendMessage(type, data = {}) {
@@ -228,6 +227,133 @@ let scannerRunning = false;
 let scanLocked = false;
 
 
+/* =====================================================
+   RESET TOKEN ΑΠΟ STREAMLIT
+===================================================== */
+
+let lastResetToken = null;
+
+
+window.addEventListener(
+    "message",
+    function(event) {
+
+        const data = event.data;
+
+        if (!data) {
+            return;
+        }
+
+        if (
+            data.type !== "streamlit:render"
+        ) {
+            return;
+        }
+
+        if (
+            !data.args
+        ) {
+            return;
+        }
+
+        const newResetToken =
+            data.args.reset_token;
+
+
+        /*
+        Στην πρώτη φόρτωση απλώς
+        αποθηκεύουμε το token.
+        */
+        if (lastResetToken === null) {
+
+            lastResetToken =
+                newResetToken;
+
+            return;
+        }
+
+
+        /*
+        Αν το reset_token άλλαξε,
+        σημαίνει ότι έγινε αποθήκευση
+        και θέλουμε νέο scan.
+        */
+        if (
+            newResetToken !== lastResetToken
+        ) {
+
+            lastResetToken =
+                newResetToken;
+
+            restartScanner();
+        }
+
+    }
+);
+
+
+/* =====================================================
+   RESTART SCANNER
+===================================================== */
+
+async function restartScanner() {
+
+    const status =
+        document.getElementById("status");
+
+
+    scanLocked = false;
+
+
+    try {
+
+        if (
+            scanner &&
+            scannerRunning
+        ) {
+
+            await scanner.stop();
+
+        }
+
+    } catch (e) {}
+
+
+    scannerRunning = false;
+
+
+    try {
+
+        if (scanner) {
+
+            scanner.clear();
+
+        }
+
+    } catch (e) {}
+
+
+    scanner = null;
+
+
+    status.innerHTML =
+        "⏳ Εκκίνηση κάμερας...";
+
+    status.className = "";
+
+
+    setTimeout(
+        startCamera,
+        300
+    );
+
+}
+
+
+/* =====================================================
+   START CAMERA
+===================================================== */
+
 async function startCamera() {
 
     const status =
@@ -289,6 +415,7 @@ async function startCamera() {
 
                 scanLocked = true;
 
+
                 status.innerHTML =
                     "✅ " + decodedText;
 
@@ -321,6 +448,7 @@ async function startCamera() {
 
                 }
 
+
                 scannerRunning =
                     false;
 
@@ -328,7 +456,7 @@ async function startCamera() {
 
             function() {
 
-                // Τα αποτυχημένα frames αγνοούνται.
+                // Τα frames χωρίς barcode αγνοούνται.
 
             }
 
@@ -403,7 +531,9 @@ async function startCamera() {
                         return;
                     }
 
-                    scanLocked = true;
+
+                    scanLocked =
+                        true;
 
 
                     status.innerHTML =
@@ -411,6 +541,13 @@ async function startCamera() {
 
                     status.className =
                         "success";
+
+
+                    if (navigator.vibrate) {
+
+                        navigator.vibrate(100);
+
+                    }
 
 
                     sendBarcode(
@@ -431,6 +568,7 @@ async function startCamera() {
 
                     }
 
+
                     scannerRunning =
                         false;
 
@@ -450,6 +588,7 @@ async function startCamera() {
 
             status.className =
                 "ready";
+
 
             setFrameHeight(
                 330

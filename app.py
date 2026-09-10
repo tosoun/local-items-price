@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
+import zxingcpp
 
+from PIL import Image
 from io import BytesIO
 from datetime import datetime
 
@@ -38,15 +39,6 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# CUSTOM SCANNER COMPONENT
-# ---------------------------------------------------------
-barcode_scanner = components.declare_component(
-    "barcode_scanner",
-    path="scanner_component"
-)
-
-
-# ---------------------------------------------------------
 # SESSION STATE
 # ---------------------------------------------------------
 if "records" not in st.session_state:
@@ -55,11 +47,11 @@ if "records" not in st.session_state:
 if "current_barcode" not in st.session_state:
     st.session_state.current_barcode = None
 
-if "last_barcode" not in st.session_state:
-    st.session_state.last_barcode = None
-
 if "last_saved" not in st.session_state:
     st.session_state.last_saved = False
+
+if "scan_counter" not in st.session_state:
+    st.session_state.scan_counter = 0
 
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
@@ -72,17 +64,6 @@ st.title("📱 Καταγραφή Τιμών")
 
 st.caption(
     "Σκάναρε το barcode και καταχώρησε market και τιμή."
-)
-
-
-# ---------------------------------------------------------
-# SCANNER
-# ---------------------------------------------------------
-st.subheader("📷 Scanner")
-
-barcode_result = barcode_scanner(
-    key="barcode_scanner_main",
-    default=None
 )
 
 
@@ -101,38 +82,71 @@ if st.session_state.last_saved:
 
         st.session_state.last_saved = False
         st.session_state.current_barcode = None
-        st.session_state.last_barcode = None
+        st.session_state.scan_counter += 1
         st.session_state.entry_counter += 1
 
         st.rerun()
 
 
 # ---------------------------------------------------------
-# ΕΛΕΓΧΟΣ BARCODE
+# ΚΑΜΕΡΑ
 # ---------------------------------------------------------
-elif barcode_result:
+if not st.session_state.last_saved:
 
-    barcode = str(barcode_result).strip()
+    photo = st.camera_input(
+        "📷 Σκάναρε το barcode",
+        key=f"camera_{st.session_state.scan_counter}"
+    )
 
-    if barcode != st.session_state.last_barcode:
 
-        st.session_state.last_barcode = barcode
+    # -----------------------------------------------------
+    # ΑΝΑΓΝΩΣΗ BARCODE
+    # -----------------------------------------------------
+    if photo is not None:
 
-        if barcode in PRODUCTS:
+        image = Image.open(photo)
 
-            st.session_state.current_barcode = barcode
+        try:
 
-            st.success(
-                "✅ Το προϊόν αναγνωρίστηκε!"
-            )
+            results = zxingcpp.read_barcodes(image)
 
-        else:
+            if len(results) == 0:
 
-            st.session_state.current_barcode = None
+                st.warning(
+                    "⚠️ Δεν μπόρεσα να διαβάσω barcode. "
+                    "Προσπάθησε ξανά πιο κοντά και με καλό φωτισμό."
+                )
+
+            else:
+
+                barcode = results[0].text.strip()
+
+                st.info(
+                    f"🔎 Barcode που διαβάστηκε: {barcode}"
+                )
+
+                if barcode in PRODUCTS:
+
+                    st.session_state.current_barcode = barcode
+
+                    st.success(
+                        "✅ Το προϊόν αναγνωρίστηκε!"
+                    )
+
+                else:
+
+                    st.session_state.current_barcode = None
+
+                    st.error(
+                        f"⛔ Το barcode {barcode} "
+                        "δεν υπάρχει στη λίστα προϊόντων."
+                    )
+
+        except Exception as e:
 
             st.error(
-                f"⛔ Το barcode {barcode} "
-                "δεν υπάρχει στη λίστα προϊόντων."
+                "❌ Παρουσιάστηκε πρόβλημα "
+                "κατά την ανάγνωση του barcode."
             )
 
 

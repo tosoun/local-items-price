@@ -21,76 +21,47 @@ st.set_page_config(
 # ---------------------------------------------------------
 st.markdown(
     """
-    <style>
+<style>
+.block-container {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.8rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    max-width: 700px !important;
+}
 
-    /* Κεντρικό περιεχόμενο */
-    .block-container {
-        padding-top: 0.5rem !important;
-        padding-bottom: 1rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        max-width: 700px !important;
-    }
+[data-testid="stVerticalBlock"] {
+    gap: 0.35rem !important;
+}
 
-    /* Μικρότερα κενά μεταξύ όλων των στοιχείων */
-    [data-testid="stVerticalBlock"] {
-        gap: 0.45rem !important;
-    }
+[data-testid="stElementContainer"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
 
-    /* Μικρότερο κενό στα components */
-    [data-testid="stElementContainer"] {
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-    }
+hr {
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.35rem !important;
+}
 
-    /* Divider */
-    hr {
-        margin-top: 0.45rem !important;
-        margin-bottom: 0.45rem !important;
-    }
+[data-testid="stAlert"] {
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+}
 
-    /* Τίτλοι */
-    h1 {
-        margin-top: 0 !important;
-        margin-bottom: 0.25rem !important;
-    }
+[data-testid="stSelectbox"],
+[data-testid="stNumberInput"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
 
-    h2,
-    h3 {
-        margin-top: 0.2rem !important;
-        margin-bottom: 0.2rem !important;
-    }
-
-    /* Success / warning / error */
-    [data-testid="stAlert"] {
-        margin-top: 0.25rem !important;
-        margin-bottom: 0.25rem !important;
-        padding-top: 0.6rem !important;
-        padding-bottom: 0.6rem !important;
-    }
-
-    /* Selectbox / input */
-    [data-testid="stSelectbox"],
-    [data-testid="stNumberInput"] {
-        margin-top: 0 !important;
-        margin-bottom: 0.15rem !important;
-    }
-
-    /* Κουμπί */
-    [data-testid="stButton"] {
-        margin-top: 0.2rem !important;
-        margin-bottom: 0 !important;
-    }
-
-    /* iframe scanner */
-    iframe {
-        margin: 0 !important;
-        padding: 0 !important;
-        display: block !important;
-    }
-
-    </style>
-    """,
+iframe {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+}
+</style>
+""",
     unsafe_allow_html=True
 )
 
@@ -152,9 +123,7 @@ if "saved_message" not in st.session_state:
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
-    st.success(
-        "✅ Η τιμή αποθηκεύτηκε!"
-    )
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
 
     st.session_state.saved_message = False
 
@@ -184,9 +153,7 @@ if barcode_result:
 
             st.session_state.current_barcode = barcode
 
-            st.success(
-                "✅ Το προϊόν αναγνωρίστηκε!"
-            )
+            st.success("✅ Το προϊόν αναγνωρίστηκε!")
 
         else:
 
@@ -205,46 +172,41 @@ if st.session_state.current_barcode:
     barcode = st.session_state.current_barcode
     product = PRODUCTS[barcode]
 
+    product_card = f"""
+<div style="
+    margin:4px 0 6px 0;
+    padding:10px 12px;
+    border-radius:12px;
+    background:#f7f7f9;
+">
+    <div style="
+        font-size:15px;
+        font-weight:600;
+        margin-bottom:3px;
+    ">
+        🛒 Προϊόν
+    </div>
 
-    # -----------------------------------------------------
-    # ΠΡΟΪΟΝ
-    # -----------------------------------------------------
+    <div style="
+        font-size:21px;
+        font-weight:700;
+        line-height:1.2;
+        margin-bottom:4px;
+    ">
+        {product}
+    </div>
+
+    <div style="
+        font-size:13px;
+        opacity:0.75;
+    ">
+        Barcode: {barcode}
+    </div>
+</div>
+"""
+
     st.markdown(
-        f"""
-        <div style="
-            margin-top:4px;
-            margin-bottom:4px;
-            padding:10px 12px;
-            border-radius:12px;
-            background:#f7f7f9;
-        ">
-
-            <div style="
-                font-size:15px;
-                font-weight:600;
-                margin-bottom:4px;
-            ">
-                🛒 Προϊόν
-            </div>
-
-            <div style="
-                font-size:22px;
-                font-weight:700;
-                line-height:1.20;
-                margin-bottom:5px;
-            ">
-                {product}
-            </div>
-
-            <div style="
-                font-size:13px;
-                opacity:0.75;
-            ">
-                Barcode: {barcode}
-            </div>
-
-        </div>
-        """,
+        product_card,
         unsafe_allow_html=True
     )
 
@@ -283,9 +245,7 @@ if st.session_state.current_barcode:
 
         if price <= 0:
 
-            st.warning(
-                "⚠️ Γράψε πρώτα την τιμή."
-            )
+            st.warning("⚠️ Γράψε πρώτα την τιμή.")
 
         else:
 
@@ -318,11 +278,7 @@ if st.session_state.current_barcode:
 # ---------------------------------------------------------
 if st.session_state.records:
 
-    st.markdown("---")
-
-    st.markdown(
-        "### 📋 Καταχωρήσεις"
-    )
+    st.markdown("### 📋 Καταχωρήσεις")
 
     df = pd.DataFrame(
         st.session_state.records
@@ -335,9 +291,6 @@ if st.session_state.records:
     )
 
 
-    # -----------------------------------------------------
-    # EXCEL
-    # -----------------------------------------------------
     output = BytesIO()
 
     with pd.ExcelWriter(
@@ -351,14 +304,10 @@ if st.session_state.records:
             sheet_name="Τιμές"
         )
 
-
     st.download_button(
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )

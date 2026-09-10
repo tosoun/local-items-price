@@ -2,6 +2,7 @@
 <html lang="el">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -40,207 +41,254 @@
                 sans-serif;
         }
 
-        .scanner-card {
+        .scanner-box {
+
             width: 100%;
-            background: #111827;
+            background: #0f172a;
+
             border-radius: 18px;
+
             overflow: hidden;
-            position: relative;
+
+            box-shadow:
+                0 4px 18px rgba(0,0,0,0.20);
         }
 
-        .scanner-title {
+        .scanner-header {
+
+            text-align: center;
+
             color: white;
-            text-align: center;
+
             font-size: 18px;
+
             font-weight: 700;
-            padding: 14px 10px 6px 10px;
+
+            padding: 14px 10px 5px 10px;
         }
 
-        .scanner-info {
-            color: #cbd5e1;
+        .scanner-subtitle {
+
             text-align: center;
+
+            color: #cbd5e1;
+
             font-size: 14px;
-            padding: 0 10px 12px 10px;
+
+            padding-bottom: 12px;
         }
 
-        .camera-area {
+
+        .camera-wrapper {
+
             position: relative;
+
             width: 100%;
-            overflow: hidden;
+
             background: black;
+
+            overflow: hidden;
         }
+
 
         #reader {
+
             width: 100%;
-            min-height: 330px;
+
+            min-height: 320px;
+
             background: black;
         }
 
+
         #reader video {
+
             width: 100% !important;
-            height: 330px !important;
+
+            height: 320px !important;
+
             object-fit: cover !important;
         }
 
-        .scan-overlay {
-            pointer-events: none;
+
+        .scan-frame {
+
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 82%;
-            height: 120px;
-            transform: translate(-50%, -50%);
-            border: 3px solid #22c55e;
-            border-radius: 16px;
-            box-shadow:
-                0 0 0 9999px rgba(0, 0, 0, 0.28);
+
             z-index: 20;
+
+            pointer-events: none;
+
+            width: 82%;
+
+            height: 125px;
+
+            top: 50%;
+
+            left: 50%;
+
+            transform: translate(
+                -50%,
+                -50%
+            );
+
+            border: 3px solid #22c55e;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 0 0 9999px rgba(0,0,0,0.25);
         }
+
 
         .scan-line {
+
             position: absolute;
-            left: 5%;
+
             width: 90%;
-            height: 3px;
+
+            left: 5%;
+
             top: 50%;
+
+            height: 3px;
+
             background: #22c55e;
-            border-radius: 10px;
-            animation: scanMove 1.8s ease-in-out infinite;
+
+            border-radius: 3px;
+
+            animation:
+                scan 1.6s
+                ease-in-out
+                infinite;
         }
 
-        @keyframes scanMove {
+
+        @keyframes scan {
 
             0% {
-                transform: translateY(-42px);
-                opacity: 0.6;
+
+                transform:
+                    translateY(-45px);
             }
 
             50% {
-                transform: translateY(42px);
-                opacity: 1;
+
+                transform:
+                    translateY(45px);
             }
 
             100% {
-                transform: translateY(-42px);
-                opacity: 0.6;
+
+                transform:
+                    translateY(-45px);
             }
         }
 
-        .corner {
-            position: absolute;
-            width: 26px;
-            height: 26px;
-            border-color: white;
-            border-style: solid;
-        }
-
-        .corner-tl {
-            top: -3px;
-            left: -3px;
-            border-width: 4px 0 0 4px;
-            border-radius: 12px 0 0 0;
-        }
-
-        .corner-tr {
-            top: -3px;
-            right: -3px;
-            border-width: 4px 4px 0 0;
-            border-radius: 0 12px 0 0;
-        }
-
-        .corner-bl {
-            bottom: -3px;
-            left: -3px;
-            border-width: 0 0 4px 4px;
-            border-radius: 0 0 0 12px;
-        }
-
-        .corner-br {
-            bottom: -3px;
-            right: -3px;
-            border-width: 0 4px 4px 0;
-            border-radius: 0 0 12px 0;
-        }
 
         #status {
-            min-height: 48px;
-            padding: 13px 12px;
+
             text-align: center;
+
             color: white;
-            font-size: 15px;
+
             font-weight: 600;
-            background: #1f2937;
+
+            font-size: 15px;
+
+            padding: 14px 10px;
+
+            background: #1e293b;
         }
 
-        .success {
-            background: #166534 !important;
+
+        #status.success {
+
+            background: #15803d;
         }
 
-        .error {
-            background: #991b1b !important;
+
+        #status.error {
+
+            background: #b91c1c;
         }
+
 
         #reader__dashboard {
+
             display: none !important;
         }
 
-        #reader__scan_region {
-            background: black !important;
-        }
 
         #reader img {
+
             display: none !important;
         }
 
     </style>
+
 </head>
 
 
 <body>
 
-<div class="scanner-card">
 
-    <div class="scanner-title">
+<div class="scanner-box">
+
+
+    <div class="scanner-header">
+
         📷 Σάρωση Barcode
+
     </div>
 
-    <div class="scanner-info">
-        Τοποθέτησε το barcode μέσα στο πλαίσιο
+
+    <div class="scanner-subtitle">
+
+        Τοποθέτησε το barcode μέσα στο πράσινο πλαίσιο
+
     </div>
 
-    <div class="camera-area">
+
+    <div class="camera-wrapper">
+
 
         <div id="reader"></div>
 
-        <div class="scan-overlay">
 
-            <div class="corner corner-tl"></div>
-            <div class="corner corner-tr"></div>
-            <div class="corner corner-bl"></div>
-            <div class="corner corner-br"></div>
+        <div class="scan-frame">
 
             <div class="scan-line"></div>
 
         </div>
 
+
     </div>
 
+
     <div id="status">
+
         🔎 Περιμένω barcode...
+
     </div>
+
 
 </div>
 
 
 <script>
 
-Streamlit.setComponentReady();
-Streamlit.setFrameHeight(460);
 
+Streamlit.setComponentReady();
+
+
+let scanner = null;
+
+let scannerRunning = false;
 
 let lastCode = "";
+
 let lastScanTime = 0;
-let scannerStarted = false;
 
 
 /* -------------------------------------------------
@@ -255,21 +303,31 @@ function playBeep() {
             window.AudioContext ||
             window.webkitAudioContext;
 
-        const ctx = new AudioContext();
+        const ctx =
+            new AudioContext();
 
-        const oscillator = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const oscillator =
+            ctx.createOscillator();
 
-        oscillator.connect(gain);
-        gain.connect(ctx.destination);
+        const gain =
+            ctx.createGain();
 
-        oscillator.type = "sine";
-        oscillator.frequency.value = 1200;
-
-        gain.gain.setValueAtTime(
-            0.18,
-            ctx.currentTime
+        oscillator.connect(
+            gain
         );
+
+        gain.connect(
+            ctx.destination
+        );
+
+        oscillator.frequency.value =
+            1250;
+
+        oscillator.type =
+            "sine";
+
+        gain.gain.value =
+            0.18;
 
         oscillator.start();
 
@@ -277,151 +335,214 @@ function playBeep() {
             ctx.currentTime + 0.12
         );
 
-    } catch (error) {
+    }
+
+    catch (e) {
 
         console.log(
-            "Audio not available",
-            error
+            "Audio error",
+            e
         );
 
     }
+
 }
 
 
 /* -------------------------------------------------
-   ΕΠΙΤΥΧΕΣ BARCODE
+   SUCCESS
 ------------------------------------------------- */
 
-function onScanSuccess(decodedText) {
+async function onScanSuccess(
+    decodedText
+) {
 
-    const now = Date.now();
+    const now =
+        Date.now();
+
 
     if (
         decodedText === lastCode &&
-        now - lastScanTime < 3000
+        now - lastScanTime < 2500
     ) {
+
         return;
     }
 
-    lastCode = decodedText;
-    lastScanTime = now;
+
+    lastCode =
+        decodedText;
+
+    lastScanTime =
+        now;
+
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
+
 
     status.innerHTML =
-        "✅ Barcode: " + decodedText;
+        "✅ Barcode: " +
+        decodedText;
 
     status.className =
         "success";
 
+
     playBeep();
+
 
     if (
         navigator.vibrate
     ) {
-        navigator.vibrate(100);
+
+        navigator.vibrate(
+            100
+        );
+
     }
+
 
     Streamlit.setComponentValue(
         decodedText
     );
+
+
+    /*
+       ΣΤΑΜΑΤΑΜΕ ΤΗΝ ΚΑΜΕΡΑ
+       ΜΕΤΑ ΤΟ ΕΠΙΤΥΧΕΣ SCAN
+    */
+
+    if (
+        scanner &&
+        scannerRunning
+    ) {
+
+        try {
+
+            await scanner.stop();
+
+        }
+
+        catch (e) {}
+
+        scannerRunning =
+            false;
+
+    }
+
 }
 
 
 /* -------------------------------------------------
-   ΕΚΚΙΝΗΣΗ ΠΙΣΩ ΚΑΜΕΡΑΣ
+   CAMERA START
 ------------------------------------------------- */
 
 async function startScanner() {
 
-    if (scannerStarted) {
-        return;
-    }
-
-    scannerStarted = true;
 
     const status =
-        document.getElementById("status");
-
-    const html5QrCode =
-        new Html5Qrcode("reader");
-
-    const config = {
-
-        fps: 15,
-
-        qrbox: function(
-            viewfinderWidth,
-            viewfinderHeight
-        ) {
-
-            return {
-                width:
-                    Math.floor(
-                        viewfinderWidth * 0.82
-                    ),
-
-                height: 120
-            };
-        },
-
-        aspectRatio: 1.45,
-
-        formatsToSupport: [
-
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-
-        ]
-    };
+        document.getElementById(
+            "status"
+        );
 
 
     try {
 
-        await html5QrCode.start(
+
+        scanner =
+            new Html5Qrcode(
+                "reader"
+            );
+
+
+        await scanner.start(
+
 
             {
-                facingMode: {
-                    ideal: "environment"
-                }
+                facingMode:
+                    "environment"
             },
 
-            config,
+
+            {
+
+                fps: 12,
+
+
+                qrbox: {
+
+                    width: 280,
+
+                    height: 125
+
+                },
+
+
+                aspectRatio:
+                    1.777778,
+
+
+                formatsToSupport: [
+
+                    Html5QrcodeSupportedFormats.EAN_13,
+
+                    Html5QrcodeSupportedFormats.EAN_8,
+
+                    Html5QrcodeSupportedFormats.UPC_A,
+
+                    Html5QrcodeSupportedFormats.UPC_E
+
+                ]
+
+            },
+
 
             onScanSuccess,
 
+
             function() {
-                /* Αγνοούμε τα συνεχή scan errors */
+
+                /* αγνοούμε τα scan errors */
+
             }
 
         );
 
 
+        scannerRunning =
+            true;
+
+
         status.innerHTML =
-            "🔎 Περιμένω barcode...";
-
-        Streamlit.setFrameHeight(460);
+            "🟢 Η κάμερα είναι έτοιμη";
 
 
-    } catch (error) {
+        Streamlit.setFrameHeight(
+            document.body.scrollHeight
+        );
+
+
+    }
+
+
+    catch (error) {
+
 
         console.error(
-            "Camera error:",
             error
         );
 
-        scannerStarted = false;
 
         status.innerHTML =
-            "⚠️ Δεν μπόρεσα να ανοίξω την πίσω κάμερα.";
+            "⚠️ Δεν μπόρεσε να ανοίξει η πίσω κάμερα";
+
 
         status.className =
             "error";
 
-        Streamlit.setFrameHeight(460);
 
     }
 
@@ -433,20 +554,30 @@ async function startScanner() {
 ------------------------------------------------- */
 
 window.addEventListener(
+
     "load",
+
     function() {
+
+
+        Streamlit.setFrameHeight(
+            440
+        );
+
 
         setTimeout(
             startScanner,
-            400
+            300
         );
 
+
     }
+
 );
 
 
 /* -------------------------------------------------
-   STREAMLIT RESIZE
+   RESIZE
 ------------------------------------------------- */
 
 const resizeObserver =
@@ -460,11 +591,14 @@ const resizeObserver =
         }
     );
 
+
 resizeObserver.observe(
     document.body
 );
 
+
 </script>
+
 
 </body>
 

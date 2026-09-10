@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 # ---------------------------------------------------------
-# ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
+# ΡΥΘΜΙΣΕΙΣ
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Καταγραφή Τιμών",
@@ -17,51 +17,40 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------
-# COMPACT MOBILE CSS
+# ΜΟΝΟ ΜΙΚΡΑ ΚΕΝΑ
 # ---------------------------------------------------------
 st.markdown(
     """
-<style>
-.block-container {
-    padding-top: 0.35rem !important;
-    padding-bottom: 0.8rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-    max-width: 700px !important;
-}
+    <style>
 
-[data-testid="stVerticalBlock"] {
-    gap: 0.35rem !important;
-}
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
 
-[data-testid="stElementContainer"] {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}
+    div[data-testid="stVerticalBlock"] {
+        gap: 0.5rem !important;
+    }
 
-hr {
-    margin-top: 0.35rem !important;
-    margin-bottom: 0.35rem !important;
-}
+    div[data-testid="stAlert"] {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+    }
 
-[data-testid="stAlert"] {
-    margin-top: 0.15rem !important;
-    margin-bottom: 0.15rem !important;
-}
+    hr {
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
 
-[data-testid="stSelectbox"],
-[data-testid="stNumberInput"] {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}
+    iframe {
+        display: block !important;
+        margin: 0 !important;
+    }
 
-iframe {
-    margin: 0 !important;
-    padding: 0 !important;
-    display: block !important;
-}
-</style>
-""",
+    </style>
+    """,
     unsafe_allow_html=True
 )
 
@@ -122,9 +111,7 @@ if "saved_message" not in st.session_state:
 # ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
-
     st.success("✅ Η τιμή αποθηκεύτηκε!")
-
     st.session_state.saved_message = False
 
 
@@ -153,7 +140,9 @@ if barcode_result:
 
             st.session_state.current_barcode = barcode
 
-            st.success("✅ Το προϊόν αναγνωρίστηκε!")
+            st.success(
+                "✅ Το προϊόν αναγνωρίστηκε!"
+            )
 
         else:
 
@@ -172,48 +161,17 @@ if st.session_state.current_barcode:
     barcode = st.session_state.current_barcode
     product = PRODUCTS[barcode]
 
-    product_card = f"""
-<div style="
-    margin:4px 0 6px 0;
-    padding:10px 12px;
-    border-radius:12px;
-    background:#f7f7f9;
-">
-    <div style="
-        font-size:15px;
-        font-weight:600;
-        margin-bottom:3px;
-    ">
-        🛒 Προϊόν
-    </div>
-
-    <div style="
-        font-size:21px;
-        font-weight:700;
-        line-height:1.2;
-        margin-bottom:4px;
-    ">
-        {product}
-    </div>
-
-    <div style="
-        font-size:13px;
-        opacity:0.75;
-    ">
-        Barcode: {barcode}
-    </div>
-</div>
-"""
+    st.markdown("### 🛒 Προϊόν")
 
     st.markdown(
-        product_card,
-        unsafe_allow_html=True
+        f"**{product}**"
+    )
+
+    st.caption(
+        f"Barcode: {barcode}"
     )
 
 
-    # -----------------------------------------------------
-    # MARKET
-    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
@@ -222,9 +180,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # ΤΙΜΗ
-    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -234,9 +189,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # ΑΠΟΘΗΚΕΥΣΗ
-    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -245,7 +197,9 @@ if st.session_state.current_barcode:
 
         if price <= 0:
 
-            st.warning("⚠️ Γράψε πρώτα την τιμή.")
+            st.warning(
+                "⚠️ Γράψε πρώτα την τιμή."
+            )
 
         else:
 
@@ -303,6 +257,7 @@ if st.session_state.records:
             index=False,
             sheet_name="Τιμές"
         )
+
 
     st.download_button(
         label="📥 Κατέβασμα Excel",

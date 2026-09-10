@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -25,12 +22,7 @@ body {
     margin: 0;
     padding: 0;
     background: transparent;
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Arial,
-        sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 .scanner {
@@ -135,7 +127,6 @@ body {
 }
 
 </style>
-
 </head>
 
 <body>
@@ -170,7 +161,7 @@ body {
 <script>
 
 /* =====================================================
-   STREAMLIT
+   ΕΠΙΚΟΙΝΩΝΙΑ ΜΕ STREAMLIT
 ===================================================== */
 
 function sendMessage(type, data = {}) {
@@ -183,6 +174,7 @@ function sendMessage(type, data = {}) {
         },
         "*"
     );
+
 }
 
 
@@ -194,6 +186,7 @@ function componentReady() {
             apiVersion: 1
         }
     );
+
 }
 
 
@@ -205,6 +198,7 @@ function setFrameHeight(height) {
             height: height
         }
     );
+
 }
 
 
@@ -217,6 +211,7 @@ function sendBarcode(value) {
             dataType: "json"
         }
     );
+
 }
 
 
@@ -226,90 +221,13 @@ function sendBarcode(value) {
 
 let scanner = null;
 let scannerRunning = false;
+let scanLocked = false;
 
-let lastCode = "";
-let lastScanTime = 0;
-
-
-/* =====================================================
-   BARCODE FOUND
-===================================================== */
-
-function barcodeFound(decodedText) {
-
-    const now = Date.now();
-
-
-    /*
-       Αγνοούμε μόνο το ΙΔΙΟ barcode
-       για 2 δευτερόλεπτα
-    */
-    if (
-        decodedText === lastCode &&
-        now - lastScanTime < 2000
-    ) {
-        return;
-    }
-
-
-    lastCode = decodedText;
-    lastScanTime = now;
-
-
-    const status =
-        document.getElementById("status");
-
-
-    status.innerHTML =
-        "✅ " + decodedText;
-
-
-    status.className =
-        "success";
-
-
-    if (navigator.vibrate) {
-
-        navigator.vibrate(100);
-
-    }
-
-
-    sendBarcode(decodedText);
-
-
-    /*
-       Η κάμερα ΔΕΝ κλείνει.
-
-       Μετά από λίγο ο scanner
-       επιστρέφει σε κατάσταση ready.
-    */
-    setTimeout(
-
-        function() {
-
-            status.innerHTML =
-                "🟢 Έτοιμο για επόμενο barcode";
-
-            status.className =
-                "ready";
-
-        },
-
-        1200
-    );
-}
-
-
-/* =====================================================
-   START CAMERA
-===================================================== */
 
 async function startCamera() {
 
     const status =
         document.getElementById("status");
-
 
     try {
 
@@ -342,48 +260,83 @@ async function startCamera() {
             },
 
             {
-                fps: 15,
+                fps: 12,
 
                 qrbox: {
                     width: 280,
                     height: 120
                 },
 
-                aspectRatio:
-                    1.777778,
+                aspectRatio: 1.777778,
 
                 formatsToSupport: [
-
                     Html5QrcodeSupportedFormats.EAN_13,
-
                     Html5QrcodeSupportedFormats.EAN_8,
-
                     Html5QrcodeSupportedFormats.UPC_A,
-
                     Html5QrcodeSupportedFormats.UPC_E
                 ]
             },
 
-            barcodeFound,
+            async function(decodedText) {
+
+                if (scanLocked) {
+                    return;
+                }
+
+                scanLocked = true;
+
+                status.innerHTML =
+                    "✅ " + decodedText;
+
+                status.className =
+                    "success";
+
+
+                if (navigator.vibrate) {
+
+                    navigator.vibrate(100);
+
+                }
+
+
+                sendBarcode(
+                    decodedText
+                );
+
+
+                if (
+                    scanner &&
+                    scannerRunning
+                ) {
+
+                    try {
+
+                        await scanner.stop();
+
+                    } catch (e) {}
+
+                }
+
+                scannerRunning =
+                    false;
+
+            },
 
             function() {
 
-                /*
-                   Τα frames χωρίς barcode
-                   αγνοούνται.
-                */
+                // Τα αποτυχημένα frames αγνοούνται.
 
             }
 
         );
 
 
-        scannerRunning = true;
+        scannerRunning =
+            true;
 
 
         status.innerHTML =
             "🟢 Έτοιμο για σάρωση";
-
 
         status.className =
             "ready";
@@ -395,18 +348,13 @@ async function startCamera() {
 
     }
 
-
     catch (error) {
 
         console.error(
-            "Camera exact error:",
+            "Camera error:",
             error
         );
 
-
-        /*
-           FALLBACK για iPhone
-        */
 
         try {
 
@@ -425,57 +373,80 @@ async function startCamera() {
                 },
 
                 {
-                    fps: 15,
+                    fps: 12,
 
                     qrbox: {
                         width: 280,
                         height: 120
                     },
 
-                    aspectRatio:
-                        1.777778,
-
                     formatsToSupport: [
-
                         Html5QrcodeSupportedFormats.EAN_13,
-
                         Html5QrcodeSupportedFormats.EAN_8,
-
                         Html5QrcodeSupportedFormats.UPC_A,
-
                         Html5QrcodeSupportedFormats.UPC_E
                     ]
                 },
 
-                barcodeFound,
+                async function(decodedText) {
+
+                    if (scanLocked) {
+                        return;
+                    }
+
+                    scanLocked = true;
+
+
+                    status.innerHTML =
+                        "✅ " + decodedText;
+
+                    status.className =
+                        "success";
+
+
+                    sendBarcode(
+                        decodedText
+                    );
+
+
+                    if (
+                        scanner &&
+                        scannerRunning
+                    ) {
+
+                        try {
+
+                            await scanner.stop();
+
+                        } catch (e) {}
+
+                    }
+
+                    scannerRunning =
+                        false;
+
+                },
 
                 function() {}
 
             );
 
 
-            scannerRunning = true;
+            scannerRunning =
+                true;
 
 
             status.innerHTML =
                 "🟢 Έτοιμο για σάρωση";
 
-
             status.className =
                 "ready";
 
-
-            setFrameHeight(
-                420
-            );
-
         }
-
 
         catch (error2) {
 
             console.error(
-                "Camera ideal error:",
                 error2
             );
 
@@ -483,11 +454,13 @@ async function startCamera() {
             status.innerHTML =
                 "🔴 Δεν άνοιξε η πίσω κάμερα";
 
-
             status.className =
                 "error";
+
         }
+
     }
+
 }
 
 
@@ -510,5 +483,4 @@ setTimeout(
 </script>
 
 </body>
-
 </html>

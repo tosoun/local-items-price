@@ -27,57 +27,59 @@ body {
 
 .scanner {
     width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: 14px;
     background: #111827;
 }
 
 .title {
     text-align: center;
     color: white;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
-    padding: 12px 8px 4px;
+    padding: 8px 6px 2px;
 }
 
 .subtitle {
     text-align: center;
     color: #d1d5db;
-    font-size: 13px;
-    padding-bottom: 10px;
+    font-size: 12px;
+    padding: 0 6px 6px;
 }
 
 .camera {
     position: relative;
     background: #000;
     width: 100%;
-    height: 320px;
+    height: 240px;
     overflow: hidden;
 }
 
 #reader {
     width: 100%;
-    height: 320px;
+    height: 240px;
 }
 
 #reader video {
     width: 100% !important;
-    height: 320px !important;
+    height: 240px !important;
     object-fit: cover !important;
 }
 
 .frame {
     position: absolute;
     z-index: 100;
-    width: 84%;
-    height: 125px;
+    width: 78%;
+    height: 95px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     border: 3px solid #22c55e;
-    border-radius: 14px;
+    border-radius: 12px;
     pointer-events: none;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,.25);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,.22);
 }
 
 .line {
@@ -94,15 +96,15 @@ body {
 @keyframes scan {
 
     0% {
-        transform: translateY(-45px);
+        transform: translateY(-32px);
     }
 
     50% {
-        transform: translateY(45px);
+        transform: translateY(32px);
     }
 
     100% {
-        transform: translateY(-45px);
+        transform: translateY(-32px);
     }
 }
 
@@ -111,7 +113,8 @@ body {
     background: #1f2937;
     text-align: center;
     font-weight: 600;
-    padding: 13px;
+    font-size: 14px;
+    padding: 9px 6px;
 }
 
 #status.ready {
@@ -264,8 +267,8 @@ async function startCamera() {
                 fps: 12,
 
                 qrbox: {
-                    width: 280,
-                    height: 120
+                    width: 260,
+                    height: 95
                 },
 
                 aspectRatio: 1.777778,
@@ -344,7 +347,7 @@ async function startCamera() {
 
 
         setFrameHeight(
-            420
+            330
         );
 
     }
@@ -382,8 +385,8 @@ async function startCamera() {
                     fps: 12,
 
                     qrbox: {
-                        width: 280,
-                        height: 120
+                        width: 260,
+                        height: 95
                     },
 
                     formatsToSupport: [
@@ -400,13 +403,11 @@ async function startCamera() {
                         return;
                     }
 
-                    scanLocked =
-                        true;
+                    scanLocked = true;
 
 
                     status.innerHTML =
-                        "✅ " +
-                        decodedText;
+                        "✅ " + decodedText;
 
                     status.className =
                         "success";
@@ -450,6 +451,10 @@ async function startCamera() {
             status.className =
                 "ready";
 
+            setFrameHeight(
+                330
+            );
+
         }
 
         catch (error2) {
@@ -479,7 +484,7 @@ async function startCamera() {
 componentReady();
 
 setFrameHeight(
-    420
+    330
 );
 
 
@@ -491,4 +496,4 @@ setTimeout(
 </script>
 
 </body>
-</html>   αυτο ειναι το σωστο το εβαλα
+</html>

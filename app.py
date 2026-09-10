@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 # ---------------------------------------------------------
-# ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
+# ΡΥΘΜΙΣΕΙΣ
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Καταγραφή Τιμών",
@@ -38,7 +38,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# CUSTOM SCANNER COMPONENT
+# SCANNER COMPONENT
 # ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
@@ -58,11 +58,11 @@ if "current_barcode" not in st.session_state:
 if "last_barcode" not in st.session_state:
     st.session_state.last_barcode = None
 
-if "scanner_counter" not in st.session_state:
-    st.session_state.scanner_counter = 0
-
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
+
+if "reset_token" not in st.session_state:
+    st.session_state.reset_token = 0
 
 if "saved_message" not in st.session_state:
     st.session_state.saved_message = False
@@ -79,7 +79,7 @@ st.caption(
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
+# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
@@ -94,13 +94,14 @@ if st.session_state.saved_message:
 st.subheader("📷 Scanner")
 
 barcode_result = barcode_scanner(
-    key=f"barcode_scanner_{st.session_state.scanner_counter}",
+    reset_token=st.session_state.reset_token,
+    key="barcode_scanner_main",
     default=None
 )
 
 
 # ---------------------------------------------------------
-# ΕΛΕΓΧΟΣ BARCODE
+# BARCODE
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -129,7 +130,7 @@ if barcode_result:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
+# ΠΡΟΪΟΝ / MARKET / ΤΙΜΗ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
@@ -140,29 +141,18 @@ if st.session_state.current_barcode:
 
     st.subheader("🛒 Προϊόν")
 
-    st.markdown(
-        f"### {product}"
-    )
+    st.markdown(f"### {product}")
 
-    st.write(
-        f"**Barcode:** {barcode}"
-    )
+    st.write(f"**Barcode:** {barcode}")
 
 
-    # -----------------------------------------------------
-    # MARKET
-    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Επιλογή Market",
         MARKETS,
-        index=0,
         key=f"market_{st.session_state.entry_counter}"
     )
 
 
-    # -----------------------------------------------------
-    # ΤΙΜΗ
-    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -172,9 +162,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # ΑΠΟΘΗΚΕΥΣΗ
-    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -214,24 +201,17 @@ if st.session_state.current_barcode:
             )
 
 
-            # -------------------------------------------------
-            # RESET ΓΙΑ ΝΕΟ SCAN
-            # -------------------------------------------------
+            # Καθαρίζουμε την τρέχουσα καταχώρηση
             st.session_state.current_barcode = None
-
             st.session_state.last_barcode = None
 
             st.session_state.entry_counter += 1
 
-            st.session_state.scanner_counter += 1
+            # Εντολή στον scanner να ξεκλειδώσει
+            st.session_state.reset_token += 1
 
             st.session_state.saved_message = True
 
-
-            # -------------------------------------------------
-            # ΞΑΝΑΦΟΡΤΩΝΟΥΜΕ ΤΗ ΣΕΛΙΔΑ
-            # ΚΑΙ Ο SCANNER ΑΝΟΙΓΕΙ ΑΥΤΟΜΑΤΑ
-            # -------------------------------------------------
             st.rerun()
 
 

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Barcode Scanner</title>
+
+    <script
+        src="https://unpkg.com/html5-qrcode"
+        type="text/javascript">
+    </script>
+</head>
+
+<body>
+
+<div
+    id="reader"
+    style="width:100%;">
+</div>
+
+<script>
+
+let lastCode = "";
+
+const beep = new Audio(
+    "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVYGAACA"
+);
+
+function onScanSuccess(decodedText) {
+
+    if (decodedText === lastCode) {
+        return;
+    }
+
+    lastCode = decodedText;
+
+    try {
+        beep.currentTime = 0;
+        beep.play();
+    } catch (e) {}
+
+    window.parent.postMessage(
+        {
+            type: "barcode",
+            value: decodedText
+        },
+        "*"
+    );
+}
+
+
+const scanner = new Html5Qrcode(
+    "reader"
+);
+
+
+Html5Qrcode.getCameras().then(
+    devices => {
+
+        let cameraId = devices[0].id;
+
+        for (let device of devices) {
+
+            const label =
+                device.label.toLowerCase();
+
+            if (
+                label.includes("back") ||
+                label.includes("rear") ||
+                label.includes("environment")
+            ) {
+
+                cameraId = device.id;
+
+                break;
+            }
+        }
+
+
+        scanner.start(
+
+            cameraId,
+
+            {
+                fps: 15,
+
+                qrbox: {
+                    width: 320,
+                    height: 140
+                },
+
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.EAN_13
+                ]
+            },
+
+            onScanSuccess
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>

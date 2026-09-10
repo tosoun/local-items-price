@@ -162,6 +162,7 @@ body {
 
 /* =====================================================
    ΕΠΙΚΟΙΝΩΝΙΑ ΜΕ STREAMLIT
+   ΧΩΡΙΣ streamlit-component-lib
 ===================================================== */
 
 function sendMessage(type, data = {}) {
@@ -356,6 +357,11 @@ async function startCamera() {
         );
 
 
+        /*
+        Αν το iPhone δεν δεχτεί exact,
+        ξαναδοκιμάζουμε με ideal.
+        */
+
         try {
 
             scanner =
@@ -394,11 +400,13 @@ async function startCamera() {
                         return;
                     }
 
-                    scanLocked = true;
+                    scanLocked =
+                        true;
 
 
                     status.innerHTML =
-                        "✅ " + decodedText;
+                        "✅ " +
+                        decodedText;
 
                     status.className =
                         "success";
@@ -483,4 +491,4 @@ setTimeout(
 </script>
 
 </body>
-</html>
+</html>   αυτο ειναι το σωστο το εβαλα

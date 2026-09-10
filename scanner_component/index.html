@@ -2,7 +2,9 @@
 <html lang="el">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -14,98 +16,210 @@
         src="https://unpkg.com/html5-qrcode"
         type="text/javascript">
     </script>
+
+    <script
+        src="https://unpkg.com/streamlit-component-lib/dist/index.js">
+    </script>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #reader {
+            width: 100%;
+        }
+
+    </style>
+
 </head>
+
 
 <body>
 
-<div
-    id="reader"
-    style="width:100%;">
-</div>
+<div id="reader"></div>
+
 
 <script>
 
 let lastCode = "";
+let lastScanTime = 0;
 
-const beep = new Audio(
-    "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVYGAACA"
-);
 
-function onScanSuccess(decodedText) {
+/* ----------------------------------------------
+   BEEP
+---------------------------------------------- */
 
-    if (decodedText === lastCode) {
-        return;
-    }
-
-    lastCode = decodedText;
+function playBeep() {
 
     try {
-        beep.currentTime = 0;
-        beep.play();
-    } catch (e) {}
 
-    window.parent.postMessage(
-        {
-            type: "barcode",
-            value: decodedText
-        },
-        "*"
-    );
-}
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
 
+        const ctx = new AudioContext();
 
-const scanner = new Html5Qrcode(
-    "reader"
-);
-
-
-Html5Qrcode.getCameras().then(
-    devices => {
-
-        let cameraId = devices[0].id;
-
-        for (let device of devices) {
-
-            const label =
-                device.label.toLowerCase();
-
-            if (
-                label.includes("back") ||
-                label.includes("rear") ||
-                label.includes("environment")
-            ) {
-
-                cameraId = device.id;
-
-                break;
-            }
+        if (ctx.state === "suspended") {
+            ctx.resume();
         }
 
+        const oscillator =
+            ctx.createOscillator();
 
-        scanner.start(
+        const gain =
+            ctx.createGain();
 
-            cameraId,
+        oscillator.connect(gain);
 
-            {
-                fps: 15,
+        gain.connect(
+            ctx.destination
+        );
 
-                qrbox: {
-                    width: 320,
-                    height: 140
-                },
+        oscillator.type = "square";
 
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.EAN_13
-                ]
-            },
+        oscillator.frequency.value = 1350;
 
-            onScanSuccess
+        gain.gain.value = 0.35;
+
+        oscillator.start();
+
+        oscillator.stop(
+            ctx.currentTime + 0.15
+        );
+
+    } catch (error) {
+
+        console.log(
+            "Beep error:",
+            error
         );
 
     }
+
+}
+
+
+/* ----------------------------------------------
+   ΕΠΙΤΥΧΕΣ SCAN
+---------------------------------------------- */
+
+function onScanSuccess(
+    decodedText,
+    decodedResult
+) {
+
+    const now = Date.now();
+
+
+    /* αποφυγή διπλού scan */
+
+    if (
+        decodedText === lastCode &&
+        now - lastScanTime < 2500
+    ) {
+
+        return;
+
+    }
+
+
+    lastCode = decodedText;
+
+    lastScanTime = now;
+
+
+    /* BEEP */
+
+    playBeep();
+
+
+    /* ΣΤΕΛΝΟΥΜΕ BARCODE ΣΤΟ STREAMLIT */
+
+    Streamlit.setComponentValue(
+        decodedText
+    );
+
+}
+
+
+/* ----------------------------------------------
+   START CAMERA
+---------------------------------------------- */
+
+const html5QrCode =
+    new Html5Qrcode(
+        "reader"
+    );
+
+
+const config = {
+
+    fps: 20,
+
+    qrbox: {
+        width: 300,
+        height: 120
+    },
+
+    aspectRatio: 1.777778,
+
+    formatsToSupport: [
+
+        Html5QrcodeSupportedFormats.EAN_13
+
+    ]
+
+};
+
+
+html5QrCode.start(
+
+    {
+        facingMode: "environment"
+    },
+
+    config,
+
+    onScanSuccess,
+
+    function(errorMessage) {
+
+        /* αγνοούμε τα scan errors */
+
+    }
+
+).then(() => {
+
+    Streamlit.setFrameHeight(
+        450
+    );
+
+}).catch(error => {
+
+    console.log(
+        "Camera error:",
+        error
+    );
+
+});
+
+
+/* ----------------------------------------------
+   STREAMLIT COMPONENT
+---------------------------------------------- */
+
+Streamlit.setComponentReady();
+
+Streamlit.setFrameHeight(
+    450
 );
 
 </script>
 
 </body>
+
 </html>

@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -13,7 +10,6 @@
 <title>Barcode Scanner</title>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
 
 <style>
 
@@ -26,260 +22,150 @@ body {
     margin: 0;
     padding: 0;
     background: transparent;
-
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Arial,
-        sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
-
 .scanner {
-
     width: 100%;
-
     overflow: hidden;
-
     border-radius: 18px;
-
     background: #111827;
 }
 
-
 .title {
-
-    color: white;
-
     text-align: center;
-
+    color: white;
     font-size: 18px;
-
     font-weight: 700;
-
-    padding: 13px 8px 4px;
+    padding: 12px 8px 4px;
 }
-
 
 .subtitle {
-
-    color: #d1d5db;
-
     text-align: center;
-
-    font-size: 14px;
-
-    padding-bottom: 12px;
+    color: #d1d5db;
+    font-size: 13px;
+    padding-bottom: 10px;
 }
-
 
 .camera {
-
     position: relative;
-
+    background: #000;
     width: 100%;
-
     height: 320px;
-
     overflow: hidden;
-
-    background: black;
 }
-
 
 #reader {
-
     width: 100%;
-
     height: 320px;
 }
 
-
 #reader video {
-
     width: 100% !important;
-
     height: 320px !important;
-
     object-fit: cover !important;
 }
 
-
 .frame {
-
     position: absolute;
-
     z-index: 100;
-
     width: 84%;
-
     height: 125px;
-
     top: 50%;
-
     left: 50%;
-
-    transform:
-        translate(-50%, -50%);
-
-    border:
-        3px solid #22c55e;
-
+    transform: translate(-50%, -50%);
+    border: 3px solid #22c55e;
     border-radius: 14px;
-
     pointer-events: none;
-
-    box-shadow:
-        0 0 0 9999px
-        rgba(0,0,0,.25);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,.25);
 }
-
 
 .line {
-
     position: absolute;
-
     left: 5%;
-
     width: 90%;
-
     height: 3px;
-
     background: #22c55e;
-
     top: 50%;
-
     border-radius: 5px;
-
-    animation:
-        scan 1.5s
-        ease-in-out
-        infinite;
+    animation: scan 1.5s ease-in-out infinite;
 }
-
 
 @keyframes scan {
 
     0% {
-        transform:
-            translateY(-45px);
+        transform: translateY(-45px);
     }
 
     50% {
-        transform:
-            translateY(45px);
+        transform: translateY(45px);
     }
 
     100% {
-        transform:
-            translateY(-45px);
+        transform: translateY(-45px);
     }
 }
 
-
 #status {
-
     color: white;
-
     background: #1f2937;
-
     text-align: center;
-
-    font-weight: 700;
-
+    font-weight: 600;
     padding: 13px;
 }
 
-
 #status.ready {
-
     background: #15803d;
 }
 
-
 #status.success {
-
     background: #16a34a;
 }
 
-
-#status.wait {
-
-    background: #d97706;
-}
-
-
 #status.error {
-
     background: #b91c1c;
 }
 
 </style>
-
 </head>
-
 
 <body>
 
-
 <div class="scanner">
 
+    <div class="title">
+        📷 Scanner Barcode
+    </div>
 
-<div class="title">
+    <div class="subtitle">
+        Βάλε το barcode μέσα στο πράσινο πλαίσιο
+    </div>
 
-📷 Scanner Barcode
+    <div class="camera">
 
-</div>
+        <div id="reader"></div>
 
+        <div class="frame">
+            <div class="line"></div>
+        </div>
 
-<div class="subtitle">
+    </div>
 
-Βάλε το barcode μέσα στο πράσινο πλαίσιο
-
-</div>
-
-
-<div class="camera">
-
-
-<div id="reader"></div>
-
-
-<div class="frame">
-
-<div class="line"></div>
-
-</div>
-
-
-</div>
-
-
-<div
-    id="status"
-    class="ready"
->
-
-🟢 Έτοιμο για σάρωση
-
-</div>
-
+    <div id="status">
+        ⏳ Εκκίνηση κάμερας...
+    </div>
 
 </div>
 
 
 <script>
 
-
 /* =====================================================
-   STREAMLIT
+   ΕΠΙΚΟΙΝΩΝΙΑ ΜΕ STREAMLIT
+   ΧΩΡΙΣ streamlit-component-lib
 ===================================================== */
 
-function sendMessage(
-    type,
-    data = {}
-) {
+function sendMessage(type, data = {}) {
 
     window.parent.postMessage(
         {
@@ -305,26 +191,24 @@ function componentReady() {
 }
 
 
-function setHeight() {
+function setFrameHeight(height) {
 
     sendMessage(
         "streamlit:setFrameHeight",
         {
-            height: 420
+            height: height
         }
     );
 
 }
 
 
-function sendBarcode(
-    barcode
-) {
+function sendBarcode(value) {
 
     sendMessage(
         "streamlit:setComponentValue",
         {
-            value: barcode,
+            value: value,
             dataType: "json"
         }
     );
@@ -333,98 +217,33 @@ function sendBarcode(
 
 
 /* =====================================================
-   VARIABLES
+   SCANNER
 ===================================================== */
 
 let scanner = null;
-
-let cameraStarted = false;
-
+let scannerRunning = false;
 let scanLocked = false;
 
-let lastResetToken = null;
-
-
-/* =====================================================
-   BARCODE FOUND
-===================================================== */
-
-function barcodeFound(
-    decodedText
-) {
-
-
-    if (scanLocked) {
-
-        return;
-
-    }
-
-
-    scanLocked = true;
-
-
-    const status =
-        document.getElementById(
-            "status"
-        );
-
-
-    status.innerHTML =
-        "✅ " +
-        decodedText;
-
-
-    status.className =
-        "success";
-
-
-    if (
-        navigator.vibrate
-    ) {
-
-        navigator.vibrate(
-            100
-        );
-
-    }
-
-
-    sendBarcode(
-        decodedText
-    );
-
-
-    /*
-    ΠΡΟΣΟΧΗ:
-    ΔΕΝ ΣΤΑΜΑΤΑΜΕ ΤΗΝ ΚΑΜΕΡΑ.
-    Παραμένει ανοικτή.
-    */
-
-}
-
-
-/* =====================================================
-   START CAMERA
-===================================================== */
 
 async function startCamera() {
 
-
-    if (cameraStarted) {
-
-        return;
-
-    }
-
-
     const status =
-        document.getElementById(
-            "status"
-        );
-
+        document.getElementById("status");
 
     try {
+
+        if (
+            typeof Html5Qrcode === "undefined"
+        ) {
+
+            status.innerHTML =
+                "❌ Δεν φορτώθηκε ο barcode scanner.";
+
+            status.className =
+                "error";
+
+            return;
+        }
 
 
         scanner =
@@ -435,165 +254,222 @@ async function startCamera() {
 
         await scanner.start(
 
-
             {
                 facingMode: {
-                    ideal:
-                        "environment"
+                    exact: "environment"
                 }
             },
 
-
             {
-
                 fps: 12,
 
-
                 qrbox: {
-
                     width: 280,
-
                     height: 120
-
                 },
 
-
-                aspectRatio:
-                    1.777778,
-
+                aspectRatio: 1.777778,
 
                 formatsToSupport: [
-
                     Html5QrcodeSupportedFormats.EAN_13,
-
                     Html5QrcodeSupportedFormats.EAN_8,
-
                     Html5QrcodeSupportedFormats.UPC_A,
-
                     Html5QrcodeSupportedFormats.UPC_E
-
                 ]
+            },
+
+            async function(decodedText) {
+
+                if (scanLocked) {
+                    return;
+                }
+
+                scanLocked = true;
+
+                status.innerHTML =
+                    "✅ " + decodedText;
+
+                status.className =
+                    "success";
+
+
+                if (navigator.vibrate) {
+
+                    navigator.vibrate(100);
+
+                }
+
+
+                sendBarcode(
+                    decodedText
+                );
+
+
+                if (
+                    scanner &&
+                    scannerRunning
+                ) {
+
+                    try {
+
+                        await scanner.stop();
+
+                    } catch (e) {}
+
+                }
+
+                scannerRunning =
+                    false;
 
             },
 
-
-            barcodeFound,
-
-
             function() {
 
-                /* αγνοούμε frames χωρίς barcode */
+                // Τα αποτυχημένα frames αγνοούνται.
 
             }
 
         );
 
 
-        cameraStarted =
+        scannerRunning =
             true;
 
 
         status.innerHTML =
             "🟢 Έτοιμο για σάρωση";
 
-
         status.className =
             "ready";
 
 
-    }
+        setFrameHeight(
+            420
+        );
 
+    }
 
     catch (error) {
 
-
         console.error(
+            "Camera error:",
             error
         );
 
 
-        status.innerHTML =
-            "🔴 Δεν άνοιξε η κάμερα";
-
-
-        status.className =
-            "error";
-
-    }
-
-}
-
-
-/* =====================================================
-   STREAMLIT RENDER
-===================================================== */
-
-window.addEventListener(
-
-    "message",
-
-    function(event) {
-
-
-        if (
-            !event.data ||
-            event.data.type !==
-            "streamlit:render"
-        ) {
-
-            return;
-
-        }
-
-
-        const args =
-            event.data.args || {};
-
-
-        const resetToken =
-            args.reset_token;
-
-
         /*
-        Μετά την αποθήκευση της τιμής
-        αλλάζει το reset_token.
-
-        Ξεκλειδώνουμε τον scanner
-        ΧΩΡΙΣ να κλείσουμε την κάμερα.
+        Αν το iPhone δεν δεχτεί exact,
+        ξαναδοκιμάζουμε με ideal.
         */
 
-        if (
-            resetToken !==
-            lastResetToken
-        ) {
+        try {
 
-
-            lastResetToken =
-                resetToken;
-
-
-            scanLocked =
-                false;
-
-
-            const status =
-                document.getElementById(
-                    "status"
+            scanner =
+                new Html5Qrcode(
+                    "reader"
                 );
+
+
+            await scanner.start(
+
+                {
+                    facingMode: {
+                        ideal: "environment"
+                    }
+                },
+
+                {
+                    fps: 12,
+
+                    qrbox: {
+                        width: 280,
+                        height: 120
+                    },
+
+                    formatsToSupport: [
+                        Html5QrcodeSupportedFormats.EAN_13,
+                        Html5QrcodeSupportedFormats.EAN_8,
+                        Html5QrcodeSupportedFormats.UPC_A,
+                        Html5QrcodeSupportedFormats.UPC_E
+                    ]
+                },
+
+                async function(decodedText) {
+
+                    if (scanLocked) {
+                        return;
+                    }
+
+                    scanLocked =
+                        true;
+
+
+                    status.innerHTML =
+                        "✅ " +
+                        decodedText;
+
+                    status.className =
+                        "success";
+
+
+                    sendBarcode(
+                        decodedText
+                    );
+
+
+                    if (
+                        scanner &&
+                        scannerRunning
+                    ) {
+
+                        try {
+
+                            await scanner.stop();
+
+                        } catch (e) {}
+
+                    }
+
+                    scannerRunning =
+                        false;
+
+                },
+
+                function() {}
+
+            );
+
+
+            scannerRunning =
+                true;
 
 
             status.innerHTML =
                 "🟢 Έτοιμο για σάρωση";
-
 
             status.className =
                 "ready";
 
         }
 
+        catch (error2) {
+
+            console.error(
+                error2
+            );
+
+
+            status.innerHTML =
+                "🔴 Δεν άνοιξε η πίσω κάμερα";
+
+            status.className =
+                "error";
+
+        }
+
     }
 
-);
+}
 
 
 /* =====================================================
@@ -602,18 +478,17 @@ window.addEventListener(
 
 componentReady();
 
-setHeight();
+setFrameHeight(
+    420
+);
 
 
 setTimeout(
     startCamera,
-    400
+    500
 );
-
 
 </script>
 
-
 </body>
-
 </html>

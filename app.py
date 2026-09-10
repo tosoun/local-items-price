@@ -4,6 +4,7 @@ import pandas as pd
 from streamlit_qrcode_scanner import qrcode_scanner
 from io import BytesIO
 from datetime import datetime
+import streamlit.components.v1 as components
 
 
 # ---------------------------------------------------------
@@ -33,11 +34,51 @@ if "records" not in st.session_state:
 if "current_barcode" not in st.session_state:
     st.session_state.current_barcode = None
 
+if "last_barcode" not in st.session_state:
+    st.session_state.last_barcode = None
+
 if "last_saved" not in st.session_state:
     st.session_state.last_saved = False
 
-if "last_barcode" not in st.session_state:
-    st.session_state.last_barcode = None
+if "beep_counter" not in st.session_state:
+    st.session_state.beep_counter = 0
+
+
+# ---------------------------------------------------------
+# ΗΧΟΣ BEEP
+# ---------------------------------------------------------
+def play_beep():
+
+    components.html(
+        """
+        <script>
+        const AudioContext =
+            window.AudioContext || window.webkitAudioContext;
+
+        const ctx = new AudioContext();
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = 1200;
+
+        gain.gain.setValueAtTime(
+            0.3,
+            ctx.currentTime
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            ctx.currentTime + 0.12
+        );
+        </script>
+        """,
+        height=0
+    )
 
 
 # ---------------------------------------------------------
@@ -46,13 +87,13 @@ if "last_barcode" not in st.session_state:
 st.title("📱 Καταγραφή Τιμών")
 
 st.caption(
-    "Σκάναρε το barcode του προϊόντος και καταχώρησε την τιμή."
+    "Σκάναρε το barcode του προϊόντος "
+    "και καταχώρησε την τιμή."
 )
 
 
 # ---------------------------------------------------------
 # SCANNER
-# ΠΑΝΤΑ ΙΔΙΟ KEY
 # ---------------------------------------------------------
 st.subheader("📷 Scanner")
 
@@ -62,11 +103,13 @@ barcode_result = qrcode_scanner(
 
 
 # ---------------------------------------------------------
-# ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
+# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.last_saved:
 
-    st.success("✅ Η τιμή αποθηκεύτηκε!")
+    st.success(
+        "✅ Η τιμή αποθηκεύτηκε!"
+    )
 
     if st.button(
         "📷 Νέο scan",
@@ -76,6 +119,7 @@ if st.session_state.last_saved:
 
         st.session_state.last_saved = False
         st.session_state.current_barcode = None
+        st.session_state.last_barcode = None
 
         st.rerun()
 
@@ -85,21 +129,32 @@ if st.session_state.last_saved:
 # ---------------------------------------------------------
 elif barcode_result:
 
-    barcode = str(barcode_result).strip()
+    barcode = str(
+        barcode_result
+    ).strip()
 
-    # Αποφεύγουμε συνεχή επανάληψη του ίδιου αποτελέσματος
+    # Νέο barcode
     if barcode != st.session_state.last_barcode:
 
         st.session_state.last_barcode = barcode
 
+        # ---------------------------------------------
+        # ΒΡΕΘΗΚΕ ΤΟ ΠΡΟΪΟΝ
+        # ---------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
+
+            # BEEP
+            play_beep()
 
             st.success(
                 "✅ Το προϊόν αναγνωρίστηκε!"
             )
 
+        # ---------------------------------------------
+        # BARCODE ΕΚΤΟΣ ΛΙΣΤΑΣ
+        # ---------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -111,7 +166,7 @@ elif barcode_result:
 
 
 # ---------------------------------------------------------
-# ΕΜΦΑΝΙΣΗ ΠΡΟΪΟΝΤΟΣ
+# ΠΡΟΪΟΝ + ΤΙΜΗ
 # ---------------------------------------------------------
 if (
     st.session_state.current_barcode
@@ -123,7 +178,9 @@ if (
 
     st.divider()
 
-    st.subheader("🛒 Προϊόν")
+    st.subheader(
+        "🛒 Προϊόν"
+    )
 
     st.markdown(
         f"### {product}"
@@ -197,7 +254,9 @@ if st.session_state.records:
 
     st.divider()
 
-    st.subheader("📋 Καταχωρήσεις")
+    st.subheader(
+        "📋 Καταχωρήσεις"
+    )
 
     df = pd.DataFrame(
         st.session_state.records

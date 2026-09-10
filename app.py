@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 # ---------------------------------------------------------
-# ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
+# ΡΥΘΜΙΣΕΙΣ
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Καταγραφή Τιμών",
@@ -38,7 +38,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# CUSTOM SCANNER
+# SCANNER
 # ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
@@ -58,11 +58,11 @@ if "current_barcode" not in st.session_state:
 if "last_barcode" not in st.session_state:
     st.session_state.last_barcode = None
 
-if "scanner_counter" not in st.session_state:
-    st.session_state.scanner_counter = 0
-
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
+
+if "reset_token" not in st.session_state:
+    st.session_state.reset_token = 0
 
 if "saved_message" not in st.session_state:
     st.session_state.saved_message = False
@@ -79,13 +79,12 @@ st.caption(
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
+# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
     st.success(
-        "✅ Η τιμή αποθηκεύτηκε! "
-        "Ο scanner είναι έτοιμος για το επόμενο προϊόν."
+        "✅ Η τιμή αποθηκεύτηκε!"
     )
 
     st.session_state.saved_message = False
@@ -93,17 +92,22 @@ if st.session_state.saved_message:
 
 # ---------------------------------------------------------
 # SCANNER
+#
+# ΠΡΟΣΟΧΗ:
+# ΤΟ KEY ΜΕΝΕΙ ΠΑΝΤΑ ΙΔΙΟ.
+# ΕΤΣΙ ΔΕΝ ΔΗΜΙΟΥΡΓΕΙΤΑΙ ΝΕΑ ΚΑΜΕΡΑ.
 # ---------------------------------------------------------
 st.subheader("📷 Scanner")
 
 barcode_result = barcode_scanner(
-    key=f"barcode_scanner_{st.session_state.scanner_counter}",
+    reset_token=st.session_state.reset_token,
+    key="barcode_scanner_main",
     default=None
 )
 
 
 # ---------------------------------------------------------
-# ΕΛΕΓΧΟΣ BARCODE
+# BARCODE
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -114,9 +118,6 @@ if barcode_result:
         st.session_state.last_barcode = barcode
 
 
-        # -------------------------------------------------
-        # ΓΝΩΣΤΟ ΠΡΟΪΟΝ
-        # -------------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
@@ -126,9 +127,6 @@ if barcode_result:
             )
 
 
-        # -------------------------------------------------
-        # ΑΓΝΩΣΤΟ ΠΡΟΪΟΝ
-        # -------------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -140,24 +138,20 @@ if barcode_result:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
+# ΠΡΟΪΟΝ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
-    barcode = st.session_state.current_barcode
+    barcode =
+        st.session_state.current_barcode
 
-    product = PRODUCTS[barcode]
+    product =
+        PRODUCTS[barcode]
 
 
     st.divider()
 
-
-    # -----------------------------------------------------
-    # ΠΡΟΪΟΝ
-    # -----------------------------------------------------
-    st.subheader(
-        "🛒 Προϊόν"
-    )
+    st.subheader("🛒 Προϊόν")
 
     st.markdown(
         f"### {product}"
@@ -200,6 +194,7 @@ if st.session_state.current_barcode:
         use_container_width=True
     ):
 
+
         if price <= 0:
 
             st.warning(
@@ -212,9 +207,6 @@ if st.session_state.current_barcode:
             now = datetime.now()
 
 
-            # ---------------------------------------------
-            # ΑΠΟΘΗΚΕΥΣΗ ΕΓΓΡΑΦΗΣ
-            # ---------------------------------------------
             st.session_state.records.append(
                 {
                     "Ημερομηνία":
@@ -239,37 +231,27 @@ if st.session_state.current_barcode:
 
 
             # ---------------------------------------------
-            # ΚΑΘΑΡΙΣΜΟΣ ΠΡΟΗΓΟΥΜΕΝΟΥ SCAN
+            # RESET ΚΑΤΑΧΩΡΗΣΗΣ
             # ---------------------------------------------
             st.session_state.current_barcode = None
 
             st.session_state.last_barcode = None
 
-
-            # ---------------------------------------------
-            # ΝΕΑ ΠΕΔΙΑ MARKET / ΤΙΜΗΣ
-            # ---------------------------------------------
             st.session_state.entry_counter += 1
 
 
             # ---------------------------------------------
-            # ΣΗΜΑΝΤΙΚΟ:
-            # ΑΛΛΑΖΟΥΜΕ ΤΟ KEY ΤΟΥ SCANNER
-            # ΩΣΤΕ ΝΑ ΞΑΝΑΦΟΡΤΩΘΕΙ
+            # ΞΕΚΛΕΙΔΩΜΑ SCANNER
+            #
+            # Η ΚΑΜΕΡΑ ΔΕΝ ΞΑΝΑΝΟΙΓΕΙ.
+            # ΜΕΝΕΙ Η ΙΔΙΑ.
             # ---------------------------------------------
-            st.session_state.scanner_counter += 1
+            st.session_state.reset_token += 1
 
 
-            # ---------------------------------------------
-            # ΜΗΝΥΜΑ ΕΠΙΤΥΧΙΑΣ
-            # ---------------------------------------------
             st.session_state.saved_message = True
 
 
-            # ---------------------------------------------
-            # RELOAD
-            # Ο SCANNER ΞΑΝΑΝΟΙΓΕΙ
-            # ---------------------------------------------
             st.rerun()
 
 
@@ -298,7 +280,7 @@ if st.session_state.records:
 
 
     # -----------------------------------------------------
-    # ΔΗΜΙΟΥΡΓΙΑ EXCEL
+    # EXCEL
     # -----------------------------------------------------
     output = BytesIO()
 
@@ -315,9 +297,6 @@ if st.session_state.records:
         )
 
 
-    # -----------------------------------------------------
-    # DOWNLOAD EXCEL
-    # -----------------------------------------------------
     st.download_button(
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),

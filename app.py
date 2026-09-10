@@ -19,12 +19,10 @@ st.set_page_config(
 
 # ---------------------------------------------------------
 # ΠΡΟΪΟΝΤΑ ΠΟΥ ΕΠΙΤΡΕΠΕΤΑΙ ΝΑ ΣΚΑΝΑΡΟΥΜΕ
-# Αργότερα θα βάλουμε εδώ τα πραγματικά barcode
+# Προς το παρόν δοκιμάζουμε μόνο ένα πραγματικό barcode
 # ---------------------------------------------------------
 PRODUCTS = {
-    "5200000000001": "Προϊόν 1",
-    "5200000000002": "Προϊόν 2",
-    "5200000000003": "Προϊόν 3",
+    "5200120690012": "Δοκιμαστικό προϊόν",
 }
 
 
@@ -46,7 +44,9 @@ if "scan_counter" not in st.session_state:
 # ---------------------------------------------------------
 st.title("📱 Καταγραφή Τιμών")
 
-st.caption("Σκάναρε το barcode του προϊόντος και καταχώρησε την τιμή.")
+st.caption(
+    "Σκάναρε το barcode του προϊόντος και καταχώρησε την τιμή."
+)
 
 
 # ---------------------------------------------------------
@@ -66,12 +66,13 @@ if photo is not None:
     image = Image.open(photo)
 
     try:
+
         results = zxingcpp.read_barcodes(image)
 
         if len(results) == 0:
 
             st.warning(
-                "Δεν μπόρεσα να διαβάσω barcode. "
+                "⚠️ Δεν μπόρεσα να διαβάσω barcode. "
                 "Προσπάθησε ξανά πιο κοντά και με καλό φωτισμό."
             )
 
@@ -79,11 +80,15 @@ if photo is not None:
 
             barcode = results[0].text.strip()
 
+            st.info(f"🔎 Barcode που διαβάστηκε: {barcode}")
+
             if barcode in PRODUCTS:
 
                 st.session_state.current_barcode = barcode
 
-                st.success("✅ Το προϊόν αναγνωρίστηκε!")
+                st.success(
+                    "✅ Το προϊόν αναγνωρίστηκε!"
+                )
 
             else:
 
@@ -96,7 +101,10 @@ if photo is not None:
 
     except Exception as e:
 
-        st.error("Παρουσιάστηκε πρόβλημα κατά την ανάγνωση του barcode.")
+        st.error(
+            "❌ Παρουσιάστηκε πρόβλημα "
+            "κατά την ανάγνωση του barcode."
+        )
 
 
 # ---------------------------------------------------------
@@ -111,9 +119,13 @@ if st.session_state.current_barcode:
 
     st.subheader("🛒 Προϊόν")
 
-    st.markdown(f"### {product}")
+    st.markdown(
+        f"### {product}"
+    )
 
-    st.write(f"**Barcode:** {barcode}")
+    st.write(
+        f"**Barcode:** {barcode}"
+    )
 
     price = st.number_input(
         "💶 Τιμή (€)",
@@ -130,24 +142,38 @@ if st.session_state.current_barcode:
 
         if price <= 0:
 
-            st.warning("Γράψε πρώτα την τιμή.")
+            st.warning(
+                "⚠️ Γράψε πρώτα την τιμή."
+            )
 
         else:
 
             st.session_state.records.append(
                 {
-                    "Ημερομηνία": datetime.now().strftime("%d/%m/%Y"),
-                    "Ώρα": datetime.now().strftime("%H:%M"),
-                    "Barcode": barcode,
-                    "Προϊόν": product,
-                    "Τιμή": price,
+                    "Ημερομηνία":
+                        datetime.now().strftime("%d/%m/%Y"),
+
+                    "Ώρα":
+                        datetime.now().strftime("%H:%M"),
+
+                    "Barcode":
+                        barcode,
+
+                    "Προϊόν":
+                        product,
+
+                    "Τιμή":
+                        price,
                 }
             )
 
             st.session_state.current_barcode = None
+
             st.session_state.scan_counter += 1
 
-            st.success("✅ Η τιμή αποθηκεύτηκε.")
+            st.success(
+                "✅ Η τιμή αποθηκεύτηκε."
+            )
 
             st.rerun()
 
@@ -159,9 +185,13 @@ if st.session_state.records:
 
     st.divider()
 
-    st.subheader("📋 Καταχωρήσεις")
+    st.subheader(
+        "📋 Καταχωρήσεις"
+    )
 
-    df = pd.DataFrame(st.session_state.records)
+    df = pd.DataFrame(
+        st.session_state.records
+    )
 
     st.dataframe(
         df,
@@ -190,6 +220,9 @@ if st.session_state.records:
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mime=(
+            "application/vnd.openxmlformats-"
+            "officedocument.spreadsheetml.sheet"
+        ),
         use_container_width=True
     )

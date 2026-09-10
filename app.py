@@ -18,24 +18,11 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝΤΑ
+# ΠΡΟΪΟΝΤΑ ΠΟΥ ΕΠΙΤΡΕΠΕΤΑΙ ΝΑ ΣΚΑΝΑΡΟΥΜΕ
 # ---------------------------------------------------------
 PRODUCTS = {
     "5200120690012": "ΘΕΟΝΗ – Φυσικό Μεταλλικό Νερό",
 }
-
-
-# ---------------------------------------------------------
-# MARKET
-# ---------------------------------------------------------
-MARKETS = [
-    "Μασούτης",
-    "Σκλαβενίτης",
-    "ΑΒ Βασιλόπουλος",
-    "My market",
-    "Γαλαξίας",
-    "Market In",
-]
 
 
 # ---------------------------------------------------------
@@ -47,14 +34,8 @@ if "records" not in st.session_state:
 if "current_barcode" not in st.session_state:
     st.session_state.current_barcode = None
 
-if "last_saved" not in st.session_state:
-    st.session_state.last_saved = False
-
 if "scan_counter" not in st.session_state:
     st.session_state.scan_counter = 0
-
-if "entry_counter" not in st.session_state:
-    st.session_state.entry_counter = 0
 
 
 # ---------------------------------------------------------
@@ -63,100 +44,71 @@ if "entry_counter" not in st.session_state:
 st.title("📱 Καταγραφή Τιμών")
 
 st.caption(
-    "Σκάναρε το barcode και καταχώρησε market και τιμή."
+    "Σκάναρε το barcode του προϊόντος και καταχώρησε την τιμή."
 )
-
-
-# ---------------------------------------------------------
-# ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
-# ---------------------------------------------------------
-if st.session_state.last_saved:
-
-    st.success("✅ Η τιμή αποθηκεύτηκε!")
-
-    if st.button(
-        "📷 Νέο scan",
-        type="primary",
-        use_container_width=True
-    ):
-
-        st.session_state.last_saved = False
-        st.session_state.current_barcode = None
-        st.session_state.scan_counter += 1
-        st.session_state.entry_counter += 1
-
-        st.rerun()
 
 
 # ---------------------------------------------------------
 # ΚΑΜΕΡΑ
 # ---------------------------------------------------------
-if not st.session_state.last_saved:
-
-    photo = st.camera_input(
-        "📷 Σκάναρε το barcode",
-        key=f"camera_{st.session_state.scan_counter}"
-    )
+photo = st.camera_input(
+    "📷 Σκάναρε το barcode",
+    key=f"camera_{st.session_state.scan_counter}"
+)
 
 
-    # -----------------------------------------------------
-    # ΑΝΑΓΝΩΣΗ BARCODE
-    # -----------------------------------------------------
-    if photo is not None:
+# ---------------------------------------------------------
+# ΑΝΑΓΝΩΣΗ BARCODE
+# ---------------------------------------------------------
+if photo is not None:
 
-        image = Image.open(photo)
+    image = Image.open(photo)
 
-        try:
+    try:
+        results = zxingcpp.read_barcodes(image)
 
-            results = zxingcpp.read_barcodes(image)
+        if len(results) == 0:
 
-            if len(results) == 0:
+            st.warning(
+                "⚠️ Δεν μπόρεσα να διαβάσω barcode. "
+                "Προσπάθησε ξανά πιο κοντά και με καλό φωτισμό."
+            )
 
-                st.warning(
-                    "⚠️ Δεν μπόρεσα να διαβάσω barcode. "
-                    "Προσπάθησε ξανά πιο κοντά και με καλό φωτισμό."
+        else:
+
+            barcode = results[0].text.strip()
+
+            st.info(f"🔎 Barcode που διαβάστηκε: {barcode}")
+
+            if barcode in PRODUCTS:
+
+                st.session_state.current_barcode = barcode
+
+                st.success(
+                    "✅ Το προϊόν αναγνωρίστηκε!"
                 )
 
             else:
 
-                barcode = results[0].text.strip()
+                st.session_state.current_barcode = None
 
-                st.info(
-                    f"🔎 Barcode που διαβάστηκε: {barcode}"
+                st.error(
+                    f"⛔ Το barcode {barcode} "
+                    "δεν υπάρχει στη λίστα προϊόντων."
                 )
 
-                if barcode in PRODUCTS:
+    except Exception:
 
-                    st.session_state.current_barcode = barcode
-
-                    st.success(
-                        "✅ Το προϊόν αναγνωρίστηκε!"
-                    )
-
-                else:
-
-                    st.session_state.current_barcode = None
-
-                    st.error(
-                        f"⛔ Το barcode {barcode} "
-                        "δεν υπάρχει στη λίστα προϊόντων."
-                    )
-
-        except Exception as e:
-
-            st.error(
-                "❌ Παρουσιάστηκε πρόβλημα "
-                "κατά την ανάγνωση του barcode."
-            )
+        st.error(
+            "❌ Παρουσιάστηκε πρόβλημα "
+            "κατά την ανάγνωση του barcode."
+        )
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
+# ΕΜΦΑΝΙΣΗ ΠΡΟΪΟΝΤΟΣ ΚΑΙ ΤΙΜΗΣ
 # ---------------------------------------------------------
-if (
-    st.session_state.current_barcode
-    and not st.session_state.last_saved
-):
+if st.session_state.current_barcode:
 
     barcode = st.session_state.current_barcode
     product = PRODUCTS[barcode]
@@ -165,41 +117,17 @@ if (
 
     st.subheader("🛒 Προϊόν")
 
-    st.markdown(
-        f"### {product}"
-    )
+    st.markdown(f"### {product}")
 
-    st.write(
-        f"**Barcode:** {barcode}"
-    )
+    st.write(f"**Barcode:** {barcode}")
 
-
-    # -----------------------------------------------------
-    # MARKET
-    # -----------------------------------------------------
-    market = st.selectbox(
-        "🏪 Επιλογή Market",
-        MARKETS,
-        index=0,
-        key=f"market_{st.session_state.entry_counter}"
-    )
-
-
-    # -----------------------------------------------------
-    # ΤΙΜΗ
-    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
         step=0.01,
-        format="%.2f",
-        key=f"price_{st.session_state.entry_counter}"
+        format="%.2f"
     )
 
-
-    # -----------------------------------------------------
-    # ΑΠΟΘΗΚΕΥΣΗ
-    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -214,18 +142,13 @@ if (
 
         else:
 
-            now = datetime.now()
-
             st.session_state.records.append(
                 {
                     "Ημερομηνία":
-                        now.strftime("%d/%m/%Y"),
+                        datetime.now().strftime("%d/%m/%Y"),
 
                     "Ώρα":
-                        now.strftime("%H:%M"),
-
-                    "Market":
-                        market,
+                        datetime.now().strftime("%H:%M"),
 
                     "Barcode":
                         barcode,
@@ -239,7 +162,11 @@ if (
             )
 
             st.session_state.current_barcode = None
-            st.session_state.last_saved = True
+            st.session_state.scan_counter += 1
+
+            st.success(
+                "✅ Η τιμή αποθηκεύτηκε."
+            )
 
             st.rerun()
 
@@ -284,9 +211,6 @@ if st.session_state.records:
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )

@@ -38,7 +38,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# SCANNER
+# SCANNER COMPONENT
 # ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
@@ -82,20 +82,12 @@ st.caption(
 # ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
-
-    st.success(
-        "✅ Η τιμή αποθηκεύτηκε!"
-    )
-
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
     st.session_state.saved_message = False
 
 
 # ---------------------------------------------------------
 # SCANNER
-#
-# ΠΡΟΣΟΧΗ:
-# ΤΟ KEY ΜΕΝΕΙ ΠΑΝΤΑ ΙΔΙΟ.
-# ΕΤΣΙ ΔΕΝ ΔΗΜΙΟΥΡΓΕΙΤΑΙ ΝΕΑ ΚΑΜΕΡΑ.
 # ---------------------------------------------------------
 st.subheader("📷 Scanner")
 
@@ -107,7 +99,7 @@ barcode_result = barcode_scanner(
 
 
 # ---------------------------------------------------------
-# BARCODE
+# ΕΛΕΓΧΟΣ BARCODE
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -117,7 +109,6 @@ if barcode_result:
 
         st.session_state.last_barcode = barcode
 
-
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
@@ -125,7 +116,6 @@ if barcode_result:
             st.success(
                 "✅ Το προϊόν αναγνωρίστηκε!"
             )
-
 
         else:
 
@@ -138,16 +128,12 @@ if barcode_result:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ
+# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
-    barcode =
-        st.session_state.current_barcode
-
-    product =
-        PRODUCTS[barcode]
-
+    barcode = st.session_state.current_barcode
+    product = PRODUCTS[barcode]
 
     st.divider()
 
@@ -194,63 +180,39 @@ if st.session_state.current_barcode:
         use_container_width=True
     ):
 
-
         if price <= 0:
 
             st.warning(
                 "⚠️ Γράψε πρώτα την τιμή."
             )
 
-
         else:
 
             now = datetime.now()
 
-
             st.session_state.records.append(
                 {
-                    "Ημερομηνία":
-                        now.strftime("%d/%m/%Y"),
-
-                    "Ώρα":
-                        now.strftime("%H:%M"),
-
-                    "Market":
-                        market,
-
-                    "Barcode":
-                        barcode,
-
-                    "Προϊόν":
-                        product,
-
-                    "Τιμή":
-                        price,
+                    "Ημερομηνία": now.strftime("%d/%m/%Y"),
+                    "Ώρα": now.strftime("%H:%M"),
+                    "Market": market,
+                    "Barcode": barcode,
+                    "Προϊόν": product,
+                    "Τιμή": price,
                 }
             )
 
-
-            # ---------------------------------------------
-            # RESET ΚΑΤΑΧΩΡΗΣΗΣ
-            # ---------------------------------------------
+            # Καθαρισμός προηγούμενης καταχώρησης
             st.session_state.current_barcode = None
-
             st.session_state.last_barcode = None
 
+            # Νέα πεδία για επόμενη καταχώρηση
             st.session_state.entry_counter += 1
 
-
-            # ---------------------------------------------
-            # ΞΕΚΛΕΙΔΩΜΑ SCANNER
-            #
-            # Η ΚΑΜΕΡΑ ΔΕΝ ΞΑΝΑΝΟΙΓΕΙ.
-            # ΜΕΝΕΙ Η ΙΔΙΑ.
-            # ---------------------------------------------
+            # Ξεκλειδώνει τον scanner
+            # χωρίς να αλλάζει το key του component
             st.session_state.reset_token += 1
 
-
             st.session_state.saved_message = True
-
 
             st.rerun()
 
@@ -266,11 +228,9 @@ if st.session_state.records:
         "📋 Καταχωρήσεις"
     )
 
-
     df = pd.DataFrame(
         st.session_state.records
     )
-
 
     st.dataframe(
         df,
@@ -284,7 +244,6 @@ if st.session_state.records:
     # -----------------------------------------------------
     output = BytesIO()
 
-
     with pd.ExcelWriter(
         output,
         engine="openpyxl"
@@ -295,7 +254,6 @@ if st.session_state.records:
             index=False,
             sheet_name="Τιμές"
         )
-
 
     st.download_button(
         label="📥 Κατέβασμα Excel",

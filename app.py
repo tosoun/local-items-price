@@ -38,7 +38,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# CUSTOM SCANNER
+# CUSTOM SCANNER COMPONENT
 # ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
@@ -64,6 +64,9 @@ if "scanner_counter" not in st.session_state:
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
 
+if "saved_message" not in st.session_state:
+    st.session_state.saved_message = False
+
 
 # ---------------------------------------------------------
 # ΤΙΤΛΟΣ
@@ -73,6 +76,16 @@ st.title("📱 Καταγραφή Τιμών")
 st.caption(
     "Σκάναρε το barcode του προϊόντος και καταχώρησε market και τιμή."
 )
+
+
+# ---------------------------------------------------------
+# ΜΗΝΥΜΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
+# ---------------------------------------------------------
+if st.session_state.saved_message:
+
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
+
+    st.session_state.saved_message = False
 
 
 # ---------------------------------------------------------
@@ -136,13 +149,20 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # MARKET
+    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Επιλογή Market",
         MARKETS,
+        index=0,
         key=f"market_{st.session_state.entry_counter}"
     )
 
 
+    # -----------------------------------------------------
+    # ΤΙΜΗ
+    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -152,6 +172,9 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # ΑΠΟΘΗΚΕΥΣΗ
+    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -190,16 +213,25 @@ if st.session_state.current_barcode:
                 }
             )
 
+
+            # -------------------------------------------------
+            # RESET ΓΙΑ ΝΕΟ SCAN
+            # -------------------------------------------------
             st.session_state.current_barcode = None
+
             st.session_state.last_barcode = None
 
             st.session_state.entry_counter += 1
+
             st.session_state.scanner_counter += 1
 
-            st.success(
-                "✅ Η τιμή αποθηκεύτηκε."
-            )
+            st.session_state.saved_message = True
 
+
+            # -------------------------------------------------
+            # ΞΑΝΑΦΟΡΤΩΝΟΥΜΕ ΤΗ ΣΕΛΙΔΑ
+            # ΚΑΙ Ο SCANNER ΑΝΟΙΓΕΙ ΑΥΤΟΜΑΤΑ
+            # -------------------------------------------------
             st.rerun()
 
 
@@ -223,6 +255,9 @@ if st.session_state.records:
     )
 
 
+    # -----------------------------------------------------
+    # EXCEL
+    # -----------------------------------------------------
     output = BytesIO()
 
     with pd.ExcelWriter(
@@ -241,6 +276,9 @@ if st.session_state.records:
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mime=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
         use_container_width=True
     )

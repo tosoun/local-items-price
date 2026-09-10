@@ -26,6 +26,19 @@ PRODUCTS = {
 
 
 # ---------------------------------------------------------
+# MARKET
+# ---------------------------------------------------------
+MARKETS = [
+    "Μασούτης",
+    "Σκλαβενίτης",
+    "ΑΒ Βασιλόπουλος",
+    "My market",
+    "Γαλαξίας",
+    "Market In",
+]
+
+
+# ---------------------------------------------------------
 # SESSION STATE
 # ---------------------------------------------------------
 if "records" not in st.session_state:
@@ -40,15 +53,11 @@ if "last_barcode" not in st.session_state:
 if "last_saved" not in st.session_state:
     st.session_state.last_saved = False
 
-if "beep_counter" not in st.session_state:
-    st.session_state.beep_counter = 0
-
 
 # ---------------------------------------------------------
 # ΗΧΟΣ BEEP
 # ---------------------------------------------------------
 def play_beep():
-
     components.html(
         """
         <script>
@@ -88,7 +97,7 @@ st.title("📱 Καταγραφή Τιμών")
 
 st.caption(
     "Σκάναρε το barcode του προϊόντος "
-    "και καταχώρησε την τιμή."
+    "και καταχώρησε market και τιμή."
 )
 
 
@@ -103,13 +112,11 @@ barcode_result = qrcode_scanner(
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
+# ΜΗΝΥΜΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
 # ---------------------------------------------------------
 if st.session_state.last_saved:
 
-    st.success(
-        "✅ Η τιμή αποθηκεύτηκε!"
-    )
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
 
     if st.button(
         "📷 Νέο scan",
@@ -133,28 +140,20 @@ elif barcode_result:
         barcode_result
     ).strip()
 
-    # Νέο barcode
     if barcode != st.session_state.last_barcode:
 
         st.session_state.last_barcode = barcode
 
-        # ---------------------------------------------
-        # ΒΡΕΘΗΚΕ ΤΟ ΠΡΟΪΟΝ
-        # ---------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
 
-            # BEEP
             play_beep()
 
             st.success(
                 "✅ Το προϊόν αναγνωρίστηκε!"
             )
 
-        # ---------------------------------------------
-        # BARCODE ΕΚΤΟΣ ΛΙΣΤΑΣ
-        # ---------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -166,7 +165,7 @@ elif barcode_result:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ + ΤΙΜΗ
+# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
 if (
     st.session_state.current_barcode
@@ -178,9 +177,7 @@ if (
 
     st.divider()
 
-    st.subheader(
-        "🛒 Προϊόν"
-    )
+    st.subheader("🛒 Προϊόν")
 
     st.markdown(
         f"### {product}"
@@ -188,6 +185,16 @@ if (
 
     st.write(
         f"**Barcode:** {barcode}"
+    )
+
+
+    # -----------------------------------------------------
+    # ΕΠΙΛΟΓΗ MARKET
+    # -----------------------------------------------------
+    market = st.selectbox(
+        "🏪 Επιλογή Market",
+        MARKETS,
+        index=0
     )
 
 
@@ -229,6 +236,9 @@ if (
 
                     "Ώρα":
                         now.strftime("%H:%M"),
+
+                    "Market":
+                        market,
 
                     "Barcode":
                         barcode,

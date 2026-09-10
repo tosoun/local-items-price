@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import zxingcpp
+import streamlit.components.v1 as components
 
-from PIL import Image
 from io import BytesIO
 from datetime import datetime
 
@@ -39,6 +38,15 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
+# CUSTOM BARCODE SCANNER
+# ---------------------------------------------------------
+barcode_scanner = components.declare_component(
+    "barcode_scanner",
+    path="scanner_component"
+)
+
+
+# ---------------------------------------------------------
 # SESSION STATE
 # ---------------------------------------------------------
 if "records" not in st.session_state:
@@ -47,11 +55,17 @@ if "records" not in st.session_state:
 if "current_barcode" not in st.session_state:
     st.session_state.current_barcode = None
 
-if "scan_counter" not in st.session_state:
-    st.session_state.scan_counter = 0
+if "last_barcode" not in st.session_state:
+    st.session_state.last_barcode = None
+
+if "last_saved" not in st.session_state:
+    st.session_state.last_saved = False
 
 if "entry_counter" not in st.session_state:
     st.session_state.entry_counter = 0
+
+if "scanner_counter" not in st.session_state:
+    st.session_state.scanner_counter = 0
 
 
 # ---------------------------------------------------------
@@ -65,42 +79,59 @@ st.caption(
 
 
 # ---------------------------------------------------------
-# ΚΑΜΕΡΑ
+# ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ
 # ---------------------------------------------------------
-photo = st.camera_input(
-    "📷 Σκάναρε το barcode",
-    key=f"camera_{st.session_state.scan_counter}"
-)
+if st.session_state.last_saved:
+
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
+
+    if st.button(
+        "📷 Νέο scan",
+        type="primary",
+        use_container_width=True
+    ):
+
+        st.session_state.last_saved = False
+        st.session_state.current_barcode = None
+        st.session_state.last_barcode = None
+
+        st.session_state.entry_counter += 1
+        st.session_state.scanner_counter += 1
+
+        st.rerun()
 
 
 # ---------------------------------------------------------
-# ΑΝΑΓΝΩΣΗ BARCODE
+# SCANNER
 # ---------------------------------------------------------
-if photo is not None:
+if not st.session_state.last_saved:
 
-    image = Image.open(photo)
+    st.subheader("📷 Scanner")
 
-    try:
-        results = zxingcpp.read_barcodes(image)
+    barcode_result = barcode_scanner(
+        key=f"barcode_scanner_{st.session_state.scanner_counter}",
+        default=None
+    )
 
-        if not results:
 
-            st.warning(
-                "⚠️ Δεν μπόρεσα να διαβάσω barcode. "
-                "Δοκίμασε ξανά με καλό φωτισμό."
-            )
+    # -----------------------------------------------------
+    # ΕΛΕΓΧΟΣ BARCODE
+    # -----------------------------------------------------
+    if barcode_result:
 
-        else:
+        barcode = str(barcode_result).strip()
 
-            barcode = results[0].text.strip()
+        if barcode != st.session_state.last_barcode:
 
-            st.info(f"🔎 Barcode: {barcode}")
+            st.session_state.last_barcode = barcode
 
             if barcode in PRODUCTS:
 
                 st.session_state.current_barcode = barcode
 
-                st.success("✅ Το προϊόν αναγνωρίστηκε!")
+                st.success(
+                    "✅ Το προϊόν αναγνωρίστηκε!"
+                )
 
             else:
 
@@ -111,17 +142,14 @@ if photo is not None:
                     "δεν υπάρχει στη λίστα προϊόντων."
                 )
 
-    except Exception:
-
-        st.error(
-            "❌ Πρόβλημα κατά την ανάγνωση του barcode."
-        )
-
 
 # ---------------------------------------------------------
 # ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
-if st.session_state.current_barcode:
+if (
+    st.session_state.current_barcode
+    and not st.session_state.last_saved
+):
 
     barcode = st.session_state.current_barcode
     product = PRODUCTS[barcode]
@@ -130,18 +158,29 @@ if st.session_state.current_barcode:
 
     st.subheader("🛒 Προϊόν")
 
-    st.markdown(f"### {product}")
+    st.markdown(
+        f"### {product}"
+    )
 
-    st.write(f"**Barcode:** {barcode}")
+    st.write(
+        f"**Barcode:** {barcode}"
+    )
 
 
+    # -----------------------------------------------------
+    # MARKET
+    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Επιλογή Market",
         MARKETS,
+        index=0,
         key=f"market_{st.session_state.entry_counter}"
     )
 
 
+    # -----------------------------------------------------
+    # ΤΙΜΗ
+    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -151,6 +190,9 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # ΑΠΟΘΗΚΕΥΣΗ
+    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -159,7 +201,9 @@ if st.session_state.current_barcode:
 
         if price <= 0:
 
-            st.warning("⚠️ Γράψε πρώτα την τιμή.")
+            st.warning(
+                "⚠️ Γράψε πρώτα την τιμή."
+            )
 
         else:
 
@@ -177,10 +221,7 @@ if st.session_state.current_barcode:
             )
 
             st.session_state.current_barcode = None
-            st.session_state.scan_counter += 1
-            st.session_state.entry_counter += 1
-
-            st.success("✅ Η τιμή αποθηκεύτηκε.")
+            st.session_state.last_saved = True
 
             st.rerun()
 
@@ -194,7 +235,9 @@ if st.session_state.records:
 
     st.subheader("📋 Καταχωρήσεις")
 
-    df = pd.DataFrame(st.session_state.records)
+    df = pd.DataFrame(
+        st.session_state.records
+    )
 
     st.dataframe(
         df,
@@ -203,6 +246,9 @@ if st.session_state.records:
     )
 
 
+    # -----------------------------------------------------
+    # EXCEL
+    # -----------------------------------------------------
     output = BytesIO()
 
     with pd.ExcelWriter(
@@ -217,9 +263,12 @@ if st.session_state.records:
         )
 
     st.download_button(
-        "📥 Κατέβασμα Excel",
+        label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mime=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
         use_container_width=True
     )

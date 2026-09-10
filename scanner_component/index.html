@@ -2,6 +2,7 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8">
+
 <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -161,8 +162,7 @@ body {
 <script>
 
 /* =====================================================
-   ΕΠΙΚΟΙΝΩΝΙΑ ΜΕ STREAMLIT
-   ΧΩΡΙΣ streamlit-component-lib
+   STREAMLIT
 ===================================================== */
 
 function sendMessage(type, data = {}) {
@@ -175,7 +175,6 @@ function sendMessage(type, data = {}) {
         },
         "*"
     );
-
 }
 
 
@@ -187,7 +186,6 @@ function componentReady() {
             apiVersion: 1
         }
     );
-
 }
 
 
@@ -199,7 +197,6 @@ function setFrameHeight(height) {
             height: height
         }
     );
-
 }
 
 
@@ -212,7 +209,6 @@ function sendBarcode(value) {
             dataType: "json"
         }
     );
-
 }
 
 
@@ -223,7 +219,54 @@ function sendBarcode(value) {
 let scanner = null;
 let scannerRunning = false;
 let scanLocked = false;
+let lastResetToken = null;
 
+
+/* =====================================================
+   BARCODE ΒΡΕΘΗΚΕ
+===================================================== */
+
+function barcodeFound(decodedText) {
+
+    if (scanLocked) {
+        return;
+    }
+
+    scanLocked = true;
+
+    const status =
+        document.getElementById("status");
+
+    status.innerHTML =
+        "✅ " + decodedText;
+
+    status.className =
+        "success";
+
+
+    if (navigator.vibrate) {
+
+        navigator.vibrate(100);
+
+    }
+
+
+    sendBarcode(decodedText);
+
+
+    /*
+       ΠΡΟΣΟΧΗ:
+       ΔΕΝ ΚΛΕΙΝΟΥΜΕ ΤΗΝ ΚΑΜΕΡΑ.
+
+       Απλώς το scanLocked = true
+       εμποδίζει δεύτερη ανάγνωση.
+    */
+}
+
+
+/* =====================================================
+   ΕΚΚΙΝΗΣΗ ΚΑΜΕΡΑΣ
+===================================================== */
 
 async function startCamera() {
 
@@ -232,9 +275,7 @@ async function startCamera() {
 
     try {
 
-        if (
-            typeof Html5Qrcode === "undefined"
-        ) {
+        if (typeof Html5Qrcode === "undefined") {
 
             status.innerHTML =
                 "❌ Δεν φορτώθηκε ο barcode scanner.";
@@ -247,9 +288,7 @@ async function startCamera() {
 
 
         scanner =
-            new Html5Qrcode(
-                "reader"
-            );
+            new Html5Qrcode("reader");
 
 
         await scanner.start(
@@ -278,63 +317,16 @@ async function startCamera() {
                 ]
             },
 
-            async function(decodedText) {
-
-                if (scanLocked) {
-                    return;
-                }
-
-                scanLocked = true;
-
-                status.innerHTML =
-                    "✅ " + decodedText;
-
-                status.className =
-                    "success";
-
-
-                if (navigator.vibrate) {
-
-                    navigator.vibrate(100);
-
-                }
-
-
-                sendBarcode(
-                    decodedText
-                );
-
-
-                if (
-                    scanner &&
-                    scannerRunning
-                ) {
-
-                    try {
-
-                        await scanner.stop();
-
-                    } catch (e) {}
-
-                }
-
-                scannerRunning =
-                    false;
-
-            },
+            barcodeFound,
 
             function() {
-
-                // Τα αποτυχημένα frames αγνοούνται.
-
+                // Αγνοούμε frames χωρίς barcode
             }
 
         );
 
 
-        scannerRunning =
-            true;
-
+        scannerRunning = true;
 
         status.innerHTML =
             "🟢 Έτοιμο για σάρωση";
@@ -342,32 +334,26 @@ async function startCamera() {
         status.className =
             "ready";
 
-
-        setFrameHeight(
-            420
-        );
+        setFrameHeight(420);
 
     }
 
     catch (error) {
 
         console.error(
-            "Camera error:",
+            "Camera exact error:",
             error
         );
 
 
         /*
-        Αν το iPhone δεν δεχτεί exact,
-        ξαναδοκιμάζουμε με ideal.
+           FALLBACK ΓΙΑ iPHONE
         */
 
         try {
 
             scanner =
-                new Html5Qrcode(
-                    "reader"
-                );
+                new Html5Qrcode("reader");
 
 
             await scanner.start(
@@ -386,6 +372,8 @@ async function startCamera() {
                         height: 120
                     },
 
+                    aspectRatio: 1.777778,
+
                     formatsToSupport: [
                         Html5QrcodeSupportedFormats.EAN_13,
                         Html5QrcodeSupportedFormats.EAN_8,
@@ -394,55 +382,14 @@ async function startCamera() {
                     ]
                 },
 
-                async function(decodedText) {
-
-                    if (scanLocked) {
-                        return;
-                    }
-
-                    scanLocked =
-                        true;
-
-
-                    status.innerHTML =
-                        "✅ " +
-                        decodedText;
-
-                    status.className =
-                        "success";
-
-
-                    sendBarcode(
-                        decodedText
-                    );
-
-
-                    if (
-                        scanner &&
-                        scannerRunning
-                    ) {
-
-                        try {
-
-                            await scanner.stop();
-
-                        } catch (e) {}
-
-                    }
-
-                    scannerRunning =
-                        false;
-
-                },
+                barcodeFound,
 
                 function() {}
 
             );
 
 
-            scannerRunning =
-                true;
-
+            scannerRunning = true;
 
             status.innerHTML =
                 "🟢 Έτοιμο για σάρωση";
@@ -455,21 +402,74 @@ async function startCamera() {
         catch (error2) {
 
             console.error(
+                "Camera ideal error:",
                 error2
             );
-
 
             status.innerHTML =
                 "🔴 Δεν άνοιξε η πίσω κάμερα";
 
             status.className =
                 "error";
+        }
+    }
+}
 
+
+/* =====================================================
+   ΛΑΜΒΑΝΟΥΜΕ RESET ΑΠΟ STREAMLIT
+===================================================== */
+
+window.addEventListener(
+    "message",
+    function(event) {
+
+        if (
+            !event.data ||
+            event.data.type !== "streamlit:render"
+        ) {
+            return;
         }
 
-    }
 
-}
+        const args =
+            event.data.args || {};
+
+
+        const resetToken =
+            args.reset_token;
+
+
+        /*
+           Μετά την αποθήκευση αλλάζει
+           το reset_token.
+
+           ΔΕΝ ξανανοίγουμε την κάμερα.
+           Απλώς επιτρέπουμε νέο barcode.
+        */
+
+        if (
+            lastResetToken !== null &&
+            resetToken !== lastResetToken
+        ) {
+
+            scanLocked = false;
+
+            const status =
+                document.getElementById("status");
+
+            status.innerHTML =
+                "🟢 Έτοιμο για το επόμενο προϊόν";
+
+            status.className =
+                "ready";
+        }
+
+
+        lastResetToken =
+            resetToken;
+    }
+);
 
 
 /* =====================================================
@@ -478,10 +478,7 @@ async function startCamera() {
 
 componentReady();
 
-setFrameHeight(
-    420
-);
-
+setFrameHeight(420);
 
 setTimeout(
     startCamera,

@@ -19,10 +19,9 @@ st.set_page_config(
 
 # ---------------------------------------------------------
 # ΠΡΟΪΟΝΤΑ ΠΟΥ ΕΠΙΤΡΕΠΕΤΑΙ ΝΑ ΣΚΑΝΑΡΟΥΜΕ
-# Προς το παρόν δοκιμάζουμε μόνο ένα πραγματικό barcode
 # ---------------------------------------------------------
 PRODUCTS = {
-    "5200120690012": "Δοκιμαστικό προϊόν",
+    "5200120690012": "ΘΕΟΝΗ – Φυσικό Μεταλλικό Νερό",
 }
 
 
@@ -66,7 +65,6 @@ if photo is not None:
     image = Image.open(photo)
 
     try:
-
         results = zxingcpp.read_barcodes(image)
 
         if len(results) == 0:
@@ -99,7 +97,7 @@ if photo is not None:
                     "δεν υπάρχει στη λίστα προϊόντων."
                 )
 
-    except Exception as e:
+    except Exception:
 
         st.error(
             "❌ Παρουσιάστηκε πρόβλημα "
@@ -119,13 +117,9 @@ if st.session_state.current_barcode:
 
     st.subheader("🛒 Προϊόν")
 
-    st.markdown(
-        f"### {product}"
-    )
+    st.markdown(f"### {product}")
 
-    st.write(
-        f"**Barcode:** {barcode}"
-    )
+    st.write(f"**Barcode:** {barcode}")
 
     price = st.number_input(
         "💶 Τιμή (€)",
@@ -168,7 +162,6 @@ if st.session_state.current_barcode:
             )
 
             st.session_state.current_barcode = None
-
             st.session_state.scan_counter += 1
 
             st.success(
@@ -185,9 +178,7 @@ if st.session_state.records:
 
     st.divider()
 
-    st.subheader(
-        "📋 Καταχωρήσεις"
-    )
+    st.subheader("📋 Καταχωρήσεις")
 
     df = pd.DataFrame(
         st.session_state.records
@@ -220,9 +211,6 @@ if st.session_state.records:
         label="📥 Κατέβασμα Excel",
         data=output.getvalue(),
         file_name="local_items_prices.xlsx",
-        mime=(
-            "application/vnd.openxmlformats-"
-            "officedocument.spreadsheetml.sheet"
-        ),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )

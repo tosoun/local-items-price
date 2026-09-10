@@ -7,12 +7,91 @@ from datetime import datetime
 
 
 # ---------------------------------------------------------
-# ΡΥΘΜΙΣΕΙΣ
+# ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Καταγραφή Τιμών",
     page_icon="📱",
     layout="centered"
+)
+
+
+# ---------------------------------------------------------
+# COMPACT MOBILE CSS
+# ---------------------------------------------------------
+st.markdown(
+    """
+    <style>
+
+    /* Κεντρικό περιεχόμενο */
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 700px !important;
+    }
+
+    /* Μικρότερα κενά μεταξύ όλων των στοιχείων */
+    [data-testid="stVerticalBlock"] {
+        gap: 0.45rem !important;
+    }
+
+    /* Μικρότερο κενό στα components */
+    [data-testid="stElementContainer"] {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Divider */
+    hr {
+        margin-top: 0.45rem !important;
+        margin-bottom: 0.45rem !important;
+    }
+
+    /* Τίτλοι */
+    h1 {
+        margin-top: 0 !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    h2,
+    h3 {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+
+    /* Success / warning / error */
+    [data-testid="stAlert"] {
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+        padding-top: 0.6rem !important;
+        padding-bottom: 0.6rem !important;
+    }
+
+    /* Selectbox / input */
+    [data-testid="stSelectbox"],
+    [data-testid="stNumberInput"] {
+        margin-top: 0 !important;
+        margin-bottom: 0.15rem !important;
+    }
+
+    /* Κουμπί */
+    [data-testid="stButton"] {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* iframe scanner */
+    iframe {
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -69,28 +148,20 @@ if "saved_message" not in st.session_state:
 
 
 # ---------------------------------------------------------
-# ΤΙΤΛΟΣ
-# ---------------------------------------------------------
-st.title("📱 Καταγραφή Τιμών")
-
-st.caption(
-    "Σκάναρε το barcode του προϊόντος και καταχώρησε market και τιμή."
-)
-
-
-# ---------------------------------------------------------
 # ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
-    st.success("✅ Η τιμή αποθηκεύτηκε!")
+
+    st.success(
+        "✅ Η τιμή αποθηκεύτηκε!"
+    )
+
     st.session_state.saved_message = False
 
 
 # ---------------------------------------------------------
 # SCANNER
 # ---------------------------------------------------------
-st.subheader("📷 Scanner")
-
 barcode_result = barcode_scanner(
     reset_token=st.session_state.reset_token,
     key="barcode_scanner_main",
@@ -122,8 +193,7 @@ if barcode_result:
             st.session_state.current_barcode = None
 
             st.error(
-                f"⛔ Το barcode {barcode} "
-                "δεν υπάρχει στη λίστα προϊόντων."
+                f"⛔ Το barcode {barcode} δεν υπάρχει στη λίστα προϊόντων."
             )
 
 
@@ -135,16 +205,47 @@ if st.session_state.current_barcode:
     barcode = st.session_state.current_barcode
     product = PRODUCTS[barcode]
 
-    st.divider()
 
-    st.subheader("🛒 Προϊόν")
-
+    # -----------------------------------------------------
+    # ΠΡΟΪΟΝ
+    # -----------------------------------------------------
     st.markdown(
-        f"### {product}"
-    )
+        f"""
+        <div style="
+            margin-top:4px;
+            margin-bottom:4px;
+            padding:10px 12px;
+            border-radius:12px;
+            background:#f7f7f9;
+        ">
 
-    st.write(
-        f"**Barcode:** {barcode}"
+            <div style="
+                font-size:15px;
+                font-weight:600;
+                margin-bottom:4px;
+            ">
+                🛒 Προϊόν
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+                line-height:1.20;
+                margin-bottom:5px;
+            ">
+                {product}
+            </div>
+
+            <div style="
+                font-size:13px;
+                opacity:0.75;
+            ">
+                Barcode: {barcode}
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
@@ -152,7 +253,7 @@ if st.session_state.current_barcode:
     # MARKET
     # -----------------------------------------------------
     market = st.selectbox(
-        "🏪 Επιλογή Market",
+        "🏪 Market",
         MARKETS,
         index=0,
         key=f"market_{st.session_state.entry_counter}"
@@ -201,15 +302,10 @@ if st.session_state.current_barcode:
                 }
             )
 
-            # Καθαρισμός προηγούμενης καταχώρησης
             st.session_state.current_barcode = None
             st.session_state.last_barcode = None
 
-            # Νέα πεδία για επόμενη καταχώρηση
             st.session_state.entry_counter += 1
-
-            # Ξεκλειδώνει τον scanner
-            # χωρίς να αλλάζει το key του component
             st.session_state.reset_token += 1
 
             st.session_state.saved_message = True
@@ -222,10 +318,10 @@ if st.session_state.current_barcode:
 # ---------------------------------------------------------
 if st.session_state.records:
 
-    st.divider()
+    st.markdown("---")
 
-    st.subheader(
-        "📋 Καταχωρήσεις"
+    st.markdown(
+        "### 📋 Καταχωρήσεις"
     )
 
     df = pd.DataFrame(
@@ -254,6 +350,7 @@ if st.session_state.records:
             index=False,
             sheet_name="Τιμές"
         )
+
 
     st.download_button(
         label="📥 Κατέβασμα Excel",

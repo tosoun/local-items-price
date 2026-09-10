@@ -2,17 +2,12 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 
-from streamlit_qrcode_scanner import qrcode_scanner
 from io import BytesIO
 from datetime import datetime
-import base64
-import wave
-import math
-import struct
 
 
 # ---------------------------------------------------------
-# ΡΥΘΜΙΣΕΙΣ
+# ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Local Items Price",
@@ -43,6 +38,15 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
+# CUSTOM SCANNER COMPONENT
+# ---------------------------------------------------------
+barcode_scanner = components.declare_component(
+    "barcode_scanner",
+    path="scanner_component"
+)
+
+
+# ---------------------------------------------------------
 # SESSION STATE
 # ---------------------------------------------------------
 if "records" not in st.session_state:
@@ -57,94 +61,8 @@ if "last_barcode" not in st.session_state:
 if "last_saved" not in st.session_state:
     st.session_state.last_saved = False
 
-if "scan_number" not in st.session_state:
-    st.session_state.scan_number = 0
-
-
-# ---------------------------------------------------------
-# ΔΗΜΙΟΥΡΓΙΑ BEEP WAV
-# ---------------------------------------------------------
-def create_beep():
-
-    sample_rate = 44100
-    duration = 0.18
-    frequency = 1250
-    volume = 0.8
-
-    buffer = BytesIO()
-
-    with wave.open(buffer, "wb") as wav:
-        wav.setnchannels(1)
-        wav.setsampwidth(2)
-        wav.setframerate(sample_rate)
-
-        samples = int(sample_rate * duration)
-
-        for i in range(samples):
-
-            value = int(
-                32767
-                * volume
-                * math.sin(
-                    2 * math.pi * frequency * i / sample_rate
-                )
-            )
-
-            wav.writeframes(
-                struct.pack("<h", value)
-            )
-
-    return base64.b64encode(
-        buffer.getvalue()
-    ).decode()
-
-
-BEEP_DATA = create_beep()
-
-
-# ---------------------------------------------------------
-# ΑΥΤΟΜΑΤΟ BEEP
-# ---------------------------------------------------------
-def play_beep():
-
-    components.html(
-        f"""
-        <audio
-            id="scanBeep"
-            autoplay
-            playsinline
-            preload="auto"
-        >
-            <source
-                src="data:audio/wav;base64,{BEEP_DATA}"
-                type="audio/wav"
-            >
-        </audio>
-
-        <script>
-
-        const sound =
-            document.getElementById("scanBeep");
-
-        sound.volume = 1.0;
-
-        sound.currentTime = 0;
-
-        sound.play()
-            .then(() => {{
-                console.log("BEEP OK");
-            }})
-            .catch((error) => {{
-                console.log(
-                    "Safari blocked autoplay",
-                    error
-                );
-            }});
-
-        </script>
-        """,
-        height=1
-    )
+if "entry_counter" not in st.session_state:
+    st.session_state.entry_counter = 0
 
 
 # ---------------------------------------------------------
@@ -162,8 +80,9 @@ st.caption(
 # ---------------------------------------------------------
 st.subheader("📷 Scanner")
 
-barcode_result = qrcode_scanner(
-    key="barcode_scanner"
+barcode_result = barcode_scanner(
+    key="barcode_scanner_main",
+    default=None
 )
 
 
@@ -172,9 +91,7 @@ barcode_result = qrcode_scanner(
 # ---------------------------------------------------------
 if st.session_state.last_saved:
 
-    st.success(
-        "✅ Η τιμή αποθηκεύτηκε!"
-    )
+    st.success("✅ Η τιμή αποθηκεύτηκε!")
 
     if st.button(
         "📷 Νέο scan",
@@ -185,19 +102,17 @@ if st.session_state.last_saved:
         st.session_state.last_saved = False
         st.session_state.current_barcode = None
         st.session_state.last_barcode = None
-        st.session_state.scan_number += 1
+        st.session_state.entry_counter += 1
 
         st.rerun()
 
 
 # ---------------------------------------------------------
-# ΑΝΑΓΝΩΡΙΣΗ BARCODE
+# ΕΛΕΓΧΟΣ BARCODE
 # ---------------------------------------------------------
 elif barcode_result:
 
-    barcode = str(
-        barcode_result
-    ).strip()
+    barcode = str(barcode_result).strip()
 
     if barcode != st.session_state.last_barcode:
 
@@ -206,11 +121,6 @@ elif barcode_result:
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
-
-            # -----------------------------
-            # ΑΥΤΟΜΑΤΟ BEEP
-            # -----------------------------
-            play_beep()
 
             st.success(
                 "✅ Το προϊόν αναγνωρίστηκε!"
@@ -227,7 +137,7 @@ elif barcode_result:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ
+# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
 if (
     st.session_state.current_barcode
@@ -239,9 +149,7 @@ if (
 
     st.divider()
 
-    st.subheader(
-        "🛒 Προϊόν"
-    )
+    st.subheader("🛒 Προϊόν")
 
     st.markdown(
         f"### {product}"
@@ -258,7 +166,8 @@ if (
     market = st.selectbox(
         "🏪 Επιλογή Market",
         MARKETS,
-        index=0
+        index=0,
+        key=f"market_{st.session_state.entry_counter}"
     )
 
 
@@ -270,7 +179,7 @@ if (
         min_value=0.00,
         step=0.01,
         format="%.2f",
-        key="price_input"
+        key=f"price_{st.session_state.entry_counter}"
     )
 
 
@@ -328,9 +237,7 @@ if st.session_state.records:
 
     st.divider()
 
-    st.subheader(
-        "📋 Καταχωρήσεις"
-    )
+    st.subheader("📋 Καταχωρήσεις")
 
     df = pd.DataFrame(
         st.session_state.records

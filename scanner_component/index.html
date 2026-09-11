@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -22,7 +25,12 @@ body {
     margin: 0;
     padding: 0;
     background: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
 }
 
 .scanner {
@@ -130,7 +138,9 @@ body {
 }
 
 </style>
+
 </head>
+
 
 <body>
 
@@ -154,7 +164,9 @@ body {
 
     </div>
 
-    <div id="status">
+    <div
+        id="status"
+    >
         ⏳ Εκκίνηση κάμερας...
     </div>
 
@@ -163,8 +175,9 @@ body {
 
 <script>
 
+
 /* =====================================================
-   ΕΠΙΚΟΙΝΩΝΙΑ ΜΕ STREAMLIT
+   STREAMLIT
 ===================================================== */
 
 function sendMessage(type, data = {}) {
@@ -177,7 +190,6 @@ function sendMessage(type, data = {}) {
         },
         "*"
     );
-
 }
 
 
@@ -189,7 +201,6 @@ function componentReady() {
             apiVersion: 1
         }
     );
-
 }
 
 
@@ -201,7 +212,6 @@ function setFrameHeight(height) {
             height: height
         }
     );
-
 }
 
 
@@ -217,57 +227,63 @@ function sendBarcode(value) {
             dataType: "json"
         }
     );
-
 }
 
 
 /* =====================================================
-   SCANNER
+   VARIABLES
 ===================================================== */
 
 let scanner = null;
+
 let scannerRunning = false;
+
 let scanLocked = false;
-
-
-/* =====================================================
-   RESET TOKEN ΑΠΟ STREAMLIT
-===================================================== */
 
 let lastResetToken = null;
 
+
+/* =====================================================
+   STREAMLIT RENDER
+===================================================== */
 
 window.addEventListener(
     "message",
     function(event) {
 
-        const data = event.data;
+        const data =
+            event.data;
 
         if (!data) {
             return;
         }
 
         if (
-            data.type !== "streamlit:render"
+            data.type !==
+            "streamlit:render"
         ) {
             return;
         }
 
-        if (
-            !data.args
-        ) {
+        if (!data.args) {
             return;
         }
+
 
         const newResetToken =
             data.args.reset_token;
 
 
+        const scannerMessage =
+            data.args.scanner_message || "";
+
+
         /*
-        Στην πρώτη φόρτωση απλώς
-        αποθηκεύουμε το token.
+        ΠΡΩΤΗ ΦΟΡΤΩΣΗ
         */
-        if (lastResetToken === null) {
+        if (
+            lastResetToken === null
+        ) {
 
             lastResetToken =
                 newResetToken;
@@ -277,19 +293,19 @@ window.addEventListener(
 
 
         /*
-        Αν το reset_token άλλαξε,
-        σημαίνει ότι έγινε αποθήκευση
-        ή άγνωστο barcode
-        και θέλουμε νέο scan.
+        ΑΛΛΑΓΗ RESET TOKEN
         */
         if (
-            newResetToken !== lastResetToken
+            newResetToken !==
+            lastResetToken
         ) {
 
             lastResetToken =
                 newResetToken;
 
-            restartScanner();
+            restartScanner(
+                scannerMessage
+            );
         }
 
     }
@@ -300,10 +316,12 @@ window.addEventListener(
    RESTART SCANNER
 ===================================================== */
 
-async function restartScanner() {
+async function restartScanner(message = "") {
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
 
 
     scanLocked = false;
@@ -317,7 +335,6 @@ async function restartScanner() {
         ) {
 
             await scanner.stop();
-
         }
 
     } catch (e) {}
@@ -347,10 +364,75 @@ async function restartScanner() {
 
 
     setTimeout(
-        startCamera,
+        function() {
+
+            startCamera(
+                message
+            );
+
+        },
         300
     );
+}
 
+
+/* =====================================================
+   STATUS MESSAGE
+===================================================== */
+
+function showReadyMessage(
+    message
+) {
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    if (message) {
+
+        /*
+        Μήνυμα αγνώστου barcode
+        μέσα στην ΠΡΑΣΙΝΗ μπάρα.
+        */
+
+        status.innerHTML =
+            message;
+
+        status.className =
+            "ready";
+
+
+        setTimeout(
+            function() {
+
+                if (
+                    scannerRunning &&
+                    !scanLocked
+                ) {
+
+                    status.innerHTML =
+                        "🟢 Έτοιμο για σάρωση";
+
+                    status.className =
+                        "ready";
+                }
+
+            },
+            1500
+        );
+
+    }
+
+    else {
+
+        status.innerHTML =
+            "🟢 Έτοιμο για σάρωση";
+
+        status.className =
+            "ready";
+    }
 }
 
 
@@ -358,15 +440,21 @@ async function restartScanner() {
    START CAMERA
 ===================================================== */
 
-async function startCamera() {
+async function startCamera(
+    message = ""
+) {
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
+
 
     try {
 
         if (
-            typeof Html5Qrcode === "undefined"
+            typeof Html5Qrcode ===
+            "undefined"
         ) {
 
             status.innerHTML =
@@ -401,36 +489,50 @@ async function startCamera() {
                     height: 95
                 },
 
-                aspectRatio: 1.777778,
+                aspectRatio:
+                    1.777778,
 
                 formatsToSupport: [
+
                     Html5QrcodeSupportedFormats.EAN_13,
+
                     Html5QrcodeSupportedFormats.EAN_8,
+
                     Html5QrcodeSupportedFormats.UPC_A,
+
                     Html5QrcodeSupportedFormats.UPC_E
                 ]
             },
 
-            async function(decodedText) {
+            async function(
+                decodedText
+            ) {
 
                 if (scanLocked) {
                     return;
                 }
 
-                scanLocked = true;
+
+                scanLocked =
+                    true;
 
 
                 status.innerHTML =
-                    "✅ " + decodedText;
+                    "✅ " +
+                    decodedText;
+
 
                 status.className =
                     "success";
 
 
-                if (navigator.vibrate) {
+                if (
+                    navigator.vibrate
+                ) {
 
-                    navigator.vibrate(100);
-
+                    navigator.vibrate(
+                        100
+                    );
                 }
 
 
@@ -448,8 +550,9 @@ async function startCamera() {
 
                         await scanner.stop();
 
-                    } catch (e) {}
+                    }
 
+                    catch (e) {}
                 }
 
 
@@ -460,7 +563,7 @@ async function startCamera() {
 
             function() {
 
-                // Τα frames χωρίς barcode αγνοούνται.
+                // Αγνοούμε frames χωρίς barcode.
 
             }
 
@@ -471,11 +574,9 @@ async function startCamera() {
             true;
 
 
-        status.innerHTML =
-            "🟢 Έτοιμο για σάρωση";
-
-        status.className =
-            "ready";
+        showReadyMessage(
+            message
+        );
 
 
         setFrameHeight(
@@ -483,6 +584,7 @@ async function startCamera() {
         );
 
     }
+
 
     catch (error) {
 
@@ -493,8 +595,7 @@ async function startCamera() {
 
 
         /*
-        Αν το iPhone δεν δεχτεί exact,
-        ξαναδοκιμάζουμε με ideal.
+        FALLBACK ΓΙΑ iPHONE
         */
 
         try {
@@ -509,7 +610,8 @@ async function startCamera() {
 
                 {
                     facingMode: {
-                        ideal: "environment"
+                        ideal:
+                            "environment"
                     }
                 },
 
@@ -522,16 +624,25 @@ async function startCamera() {
                     },
 
                     formatsToSupport: [
+
                         Html5QrcodeSupportedFormats.EAN_13,
+
                         Html5QrcodeSupportedFormats.EAN_8,
+
                         Html5QrcodeSupportedFormats.UPC_A,
+
                         Html5QrcodeSupportedFormats.UPC_E
                     ]
                 },
 
-                async function(decodedText) {
+                async function(
+                    decodedText
+                ) {
 
-                    if (scanLocked) {
+                    if (
+                        scanLocked
+                    ) {
+
                         return;
                     }
 
@@ -541,16 +652,21 @@ async function startCamera() {
 
 
                     status.innerHTML =
-                        "✅ " + decodedText;
+                        "✅ " +
+                        decodedText;
+
 
                     status.className =
                         "success";
 
 
-                    if (navigator.vibrate) {
+                    if (
+                        navigator.vibrate
+                    ) {
 
-                        navigator.vibrate(100);
-
+                        navigator.vibrate(
+                            100
+                        );
                     }
 
 
@@ -568,8 +684,9 @@ async function startCamera() {
 
                             await scanner.stop();
 
-                        } catch (e) {}
+                        }
 
+                        catch (e) {}
                     }
 
 
@@ -579,7 +696,6 @@ async function startCamera() {
                 },
 
                 function() {}
-
             );
 
 
@@ -587,11 +703,9 @@ async function startCamera() {
                 true;
 
 
-            status.innerHTML =
-                "🟢 Έτοιμο για σάρωση";
-
-            status.className =
-                "ready";
+            showReadyMessage(
+                message
+            );
 
 
             setFrameHeight(
@@ -599,6 +713,7 @@ async function startCamera() {
             );
 
         }
+
 
         catch (error2) {
 
@@ -610,13 +725,12 @@ async function startCamera() {
             status.innerHTML =
                 "🔴 Δεν άνοιξε η πίσω κάμερα";
 
+
             status.className =
                 "error";
 
         }
-
     }
-
 }
 
 
@@ -626,17 +740,23 @@ async function startCamera() {
 
 componentReady();
 
+
 setFrameHeight(
     330
 );
 
 
 setTimeout(
-    startCamera,
+    function() {
+
+        startCamera();
+
+    },
     500
 );
 
 </script>
 
 </body>
+
 </html>

@@ -210,7 +210,10 @@ function sendBarcode(value) {
     sendMessage(
         "streamlit:setComponentValue",
         {
-            value: value,
+            value: {
+                code: value,
+                scan_id: Date.now()
+            },
             dataType: "json"
         }
     );
@@ -276,6 +279,7 @@ window.addEventListener(
         /*
         Αν το reset_token άλλαξε,
         σημαίνει ότι έγινε αποθήκευση
+        ή άγνωστο barcode
         και θέλουμε νέο scan.
         */
         if (

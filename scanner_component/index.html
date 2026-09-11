@@ -164,9 +164,7 @@ body {
 
     </div>
 
-    <div
-        id="status"
-    >
+    <div id="status">
         ⏳ Εκκίνηση κάμερας...
     </div>
 
@@ -231,6 +229,179 @@ function sendBarcode(value) {
 
 
 /* =====================================================
+   ΗΧΟΙ
+===================================================== */
+
+let audioContext = null;
+
+
+function getAudioContext() {
+
+    if (!audioContext) {
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+    }
+
+    if (
+        audioContext.state ===
+        "suspended"
+    ) {
+
+        audioContext.resume();
+    }
+
+    return audioContext;
+}
+
+
+/* =====================================================
+   ΕΠΙΤΥΧΗΜΕΝΟ ΜΠΙΠ
+===================================================== */
+
+function playSuccessBeep() {
+
+    try {
+
+        const ctx =
+            getAudioContext();
+
+        const oscillator =
+            ctx.createOscillator();
+
+        const gain =
+            ctx.createGain();
+
+
+        oscillator.type =
+            "sine";
+
+        oscillator.frequency.value =
+            1100;
+
+
+        gain.gain.setValueAtTime(
+            0.18,
+            ctx.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.01,
+            ctx.currentTime + 0.12
+        );
+
+
+        oscillator.connect(
+            gain
+        );
+
+        gain.connect(
+            ctx.destination
+        );
+
+
+        oscillator.start();
+
+        oscillator.stop(
+            ctx.currentTime + 0.12
+        );
+
+    }
+
+    catch (e) {
+
+        console.log(
+            "Audio success error:",
+            e
+        );
+    }
+}
+
+
+/* =====================================================
+   ERROR ΜΠΙΠ ΜΠΙΠ
+===================================================== */
+
+function playErrorBeep() {
+
+    try {
+
+        const ctx =
+            getAudioContext();
+
+
+        function beep(
+            startTime
+        ) {
+
+            const oscillator =
+                ctx.createOscillator();
+
+            const gain =
+                ctx.createGain();
+
+
+            oscillator.type =
+                "square";
+
+            oscillator.frequency.value =
+                420;
+
+
+            gain.gain.setValueAtTime(
+                0.12,
+                startTime
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.01,
+                startTime + 0.12
+            );
+
+
+            oscillator.connect(
+                gain
+            );
+
+            gain.connect(
+                ctx.destination
+            );
+
+
+            oscillator.start(
+                startTime
+            );
+
+            oscillator.stop(
+                startTime + 0.12
+            );
+        }
+
+
+        beep(
+            ctx.currentTime
+        );
+
+        beep(
+            ctx.currentTime + 0.18
+        );
+
+    }
+
+    catch (e) {
+
+        console.log(
+            "Audio error error:",
+            e
+        );
+    }
+}
+
+
+/* =====================================================
    VARIABLES
 ===================================================== */
 
@@ -278,9 +449,6 @@ window.addEventListener(
             data.args.scanner_message || "";
 
 
-        /*
-        ΠΡΩΤΗ ΦΟΡΤΩΣΗ
-        */
         if (
             lastResetToken === null
         ) {
@@ -292,9 +460,6 @@ window.addEventListener(
         }
 
 
-        /*
-        ΑΛΛΑΓΗ RESET TOKEN
-        */
         if (
             newResetToken !==
             lastResetToken
@@ -392,16 +557,14 @@ function showReadyMessage(
 
     if (message) {
 
-        /*
-        Μήνυμα αγνώστου barcode
-        μέσα στην ΠΡΑΣΙΝΗ μπάρα.
-        */
-
         status.innerHTML =
             message;
 
         status.className =
             "ready";
+
+
+        playErrorBeep();
 
 
         setTimeout(
@@ -524,6 +687,9 @@ async function startCamera(
 
                 status.className =
                     "success";
+
+
+                playSuccessBeep();
 
 
                 if (
@@ -658,6 +824,9 @@ async function startCamera(
 
                     status.className =
                         "success";
+
+
+                    playSuccessBeep();
 
 
                     if (

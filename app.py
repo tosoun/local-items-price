@@ -106,8 +106,8 @@ if "reset_token" not in st.session_state:
 if "saved_message" not in st.session_state:
     st.session_state.saved_message = False
 
-if "scanner_error" not in st.session_state:
-    st.session_state.scanner_error = None
+if "scanner_message" not in st.session_state:
+    st.session_state.scanner_message = ""
 
 
 # ---------------------------------------------------------
@@ -123,25 +123,18 @@ if st.session_state.saved_message:
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΑΓΝΩΣΤΟΥ BARCODE
-# ---------------------------------------------------------
-if st.session_state.scanner_error:
-
-    st.error(
-        st.session_state.scanner_error
-    )
-
-    st.session_state.scanner_error = None
-
-
-# ---------------------------------------------------------
 # SCANNER
 # ---------------------------------------------------------
 barcode_result = barcode_scanner(
     reset_token=st.session_state.reset_token,
+    scanner_message=st.session_state.scanner_message,
     key="barcode_scanner_main",
     default=None
 )
+
+
+# Το μήνυμα έχει ήδη σταλεί στον scanner
+st.session_state.scanner_message = ""
 
 
 # ---------------------------------------------------------
@@ -149,9 +142,6 @@ barcode_result = barcode_scanner(
 # ---------------------------------------------------------
 if barcode_result:
 
-    # ---------------------------------------------
-    # ΝΕΑ ΜΟΡΦΗ ΑΠΟ ΤΟ INDEX.HTML
-    # ---------------------------------------------
     if isinstance(
         barcode_result,
         dict
@@ -168,9 +158,6 @@ if barcode_result:
             "scan_id"
         )
 
-    # ---------------------------------------------
-    # FALLBACK
-    # ---------------------------------------------
     else:
 
         barcode = str(
@@ -180,9 +167,9 @@ if barcode_result:
         scan_id = barcode
 
 
-    # ---------------------------------------------
-    # ΕΛΕΓΧΟΣ ΝΕΟΥ SCAN
-    # ---------------------------------------------
+    # -----------------------------------------------------
+    # ΝΕΟ SCAN
+    # -----------------------------------------------------
     if (
         scan_id !=
         st.session_state.last_scan_id
@@ -191,9 +178,9 @@ if barcode_result:
         st.session_state.last_scan_id = scan_id
 
 
-        # -----------------------------------------
-        # ΕΓΚΥΡΟ ΠΡΟΪΟΝ
-        # -----------------------------------------
+        # -------------------------------------------------
+        # ΤΟ ΠΡΟΪΟΝ ΥΠΑΡΧΕΙ
+        # -------------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
@@ -203,19 +190,19 @@ if barcode_result:
             )
 
 
-        # -----------------------------------------
-        # ΑΓΝΩΣΤΟ BARCODE
-        # -----------------------------------------
+        # -------------------------------------------------
+        # ΤΟ ΠΡΟΪΟΝ ΔΕΝ ΥΠΑΡΧΕΙ
+        # -------------------------------------------------
         else:
 
             st.session_state.current_barcode = None
 
-            st.session_state.scanner_error = (
-                f"⛔ Το barcode {barcode} "
-                "δεν υπάρχει στη λίστα προϊόντων."
+            # Μήνυμα μέσα στον scanner
+            st.session_state.scanner_message = (
+                "⛔ Ο κωδικός δεν υπάρχει"
             )
 
-            # ΞΑΝΑΝΟΙΓΕΙ Ο SCANNER
+            # Restart scanner
             st.session_state.reset_token += 1
 
             st.rerun()
@@ -235,9 +222,6 @@ if st.session_state.current_barcode:
     ]
 
 
-    # -----------------------------------------------------
-    # ΠΡΟΪΟΝ
-    # -----------------------------------------------------
     st.markdown(
         "### 🛒 Προϊόν"
     )
@@ -302,14 +286,10 @@ if st.session_state.current_barcode:
             st.session_state.records.append(
                 {
                     "Ημερομηνία":
-                        now.strftime(
-                            "%d/%m/%Y"
-                        ),
+                        now.strftime("%d/%m/%Y"),
 
                     "Ώρα":
-                        now.strftime(
-                            "%H:%M"
-                        ),
+                        now.strftime("%H:%M"),
 
                     "Market":
                         market,
@@ -329,7 +309,9 @@ if st.session_state.current_barcode:
 
             st.session_state.entry_counter += 1
 
-            # ΞΑΝΑΝΟΙΓΕΙ Ο SCANNER
+            # Κανονικό restart scanner
+            st.session_state.scanner_message = ""
+
             st.session_state.reset_token += 1
 
             st.session_state.saved_message = True

@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 
 from io import BytesIO
 from datetime import datetime
+import base64
 
 
 # ---------------------------------------------------------
@@ -47,6 +48,30 @@ st.markdown(
     iframe {
         display: block !important;
         margin: 0 !important;
+    }
+
+    .excel-button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px 16px;
+        margin-top: 8px;
+
+        background: #ffffff;
+        color: #111827;
+
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        text-decoration: none !important;
+    }
+
+    .excel-button:hover {
+        background: #f3f4f6;
+        color: #111827;
     }
 
     </style>
@@ -167,9 +192,6 @@ if barcode_result:
         scan_id = barcode
 
 
-    # -----------------------------------------------------
-    # ΝΕΟ SCAN
-    # -----------------------------------------------------
     if (
         scan_id !=
         st.session_state.last_scan_id
@@ -197,12 +219,10 @@ if barcode_result:
 
             st.session_state.current_barcode = None
 
-            # Μήνυμα μέσα στον scanner
             st.session_state.scanner_message = (
                 "⛔ Ο κωδικός δεν υπάρχει"
             )
 
-            # Restart scanner
             st.session_state.reset_token += 1
 
             st.rerun()
@@ -235,9 +255,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # MARKET
-    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
@@ -249,9 +266,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # ΤΙΜΗ
-    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -264,9 +278,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # ΑΠΟΘΗΚΕΥΣΗ
-    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -309,7 +320,6 @@ if st.session_state.current_barcode:
 
             st.session_state.entry_counter += 1
 
-            # Κανονικό restart scanner
             st.session_state.scanner_message = ""
 
             st.session_state.reset_token += 1
@@ -340,7 +350,7 @@ if st.session_state.records:
 
 
     # -----------------------------------------------------
-    # EXCEL
+    # ΔΗΜΙΟΥΡΓΙΑ EXCEL
     # -----------------------------------------------------
     output = BytesIO()
 
@@ -355,14 +365,38 @@ if st.session_state.records:
             sheet_name="Τιμές"
         )
 
-    st.download_button(
-        label="📥 Κατέβασμα Excel",
-        data=output.getvalue(),
-        file_name="local_items_prices.xlsx",
-        mime=(
-            "application/"
-            "vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
-        use_container_width=True
+
+    excel_data = output.getvalue()
+
+
+    # -----------------------------------------------------
+    # EXCEL ΣΕ ΝΕΑ ΚΑΡΤΕΛΑ
+    # -----------------------------------------------------
+    excel_base64 = base64.b64encode(
+        excel_data
+    ).decode()
+
+
+    excel_href = (
+        "data:"
+        "application/vnd.openxmlformats-officedocument."
+        "spreadsheetml.sheet;"
+        "base64,"
+        + excel_base64
+    )
+
+
+    st.markdown(
+        f"""
+        <a
+            class="excel-button"
+            href="{excel_href}"
+            download="local_items_prices.xlsx"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            📥 Άνοιγμα / Κατέβασμα Excel
+        </a>
+        """,
+        unsafe_allow_html=True
     )

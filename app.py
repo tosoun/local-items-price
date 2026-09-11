@@ -23,6 +23,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
+
 .block-container {
     padding-top: 0.5rem !important;
     padding-left: 1rem !important;
@@ -55,18 +56,23 @@ iframe {
     text-align: center;
     padding: 12px 16px;
     margin-top: 8px;
+
     background: #ffffff;
     color: #111827 !important;
+
     border: 1px solid #d1d5db;
     border-radius: 8px;
+
     font-size: 16px;
     font-weight: 600;
+
     text-decoration: none !important;
 }
 
 .excel-button:hover {
     background: #f3f4f6;
 }
+
 </style>
 """,
     unsafe_allow_html=True
@@ -127,13 +133,18 @@ if "saved_message" not in st.session_state:
 if "scanner_message" not in st.session_state:
     st.session_state.scanner_message = ""
 
+if "manual_search_message" not in st.session_state:
+    st.session_state.manual_search_message = ""
+
 
 # ---------------------------------------------------------
 # ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
-    st.success("✅ Η τιμή αποθηκεύτηκε!")
+    st.success(
+        "✅ Η τιμή αποθηκεύτηκε!"
+    )
 
     st.session_state.saved_message = False
 
@@ -149,43 +160,59 @@ barcode_result = barcode_scanner(
 )
 
 
+# Το μήνυμα έχει ήδη σταλεί στον scanner
 st.session_state.scanner_message = ""
 
 
 # ---------------------------------------------------------
-# ΕΛΕΓΧΟΣ BARCODE
+# ΕΛΕΓΧΟΣ BARCODE ΑΠΟ SCANNER
 # ---------------------------------------------------------
 if barcode_result:
 
-    if isinstance(barcode_result, dict):
+    if isinstance(
+        barcode_result,
+        dict
+    ):
 
         barcode = str(
-            barcode_result.get("code", "")
+            barcode_result.get(
+                "code",
+                ""
+            )
         ).strip()
 
-        scan_id = barcode_result.get("scan_id")
+        scan_id = barcode_result.get(
+            "scan_id"
+        )
 
     else:
 
-        barcode = str(barcode_result).strip()
+        barcode = str(
+            barcode_result
+        ).strip()
 
         scan_id = barcode
 
 
-    if scan_id != st.session_state.last_scan_id:
+    if (
+        scan_id !=
+        st.session_state.last_scan_id
+    ):
 
         st.session_state.last_scan_id = scan_id
 
 
+        # -------------------------------------------------
+        # ΤΟ ΠΡΟΪΟΝ ΥΠΑΡΧΕΙ
+        # -------------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
 
-            st.success(
-                "✅ Το προϊόν αναγνωρίστηκε!"
-            )
 
-
+        # -------------------------------------------------
+        # ΤΟ ΠΡΟΪΟΝ ΔΕΝ ΥΠΑΡΧΕΙ
+        # -------------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -200,16 +227,113 @@ if barcode_result:
 
 
 # ---------------------------------------------------------
+# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ BARCODE
+# ---------------------------------------------------------
+st.markdown(
+    "### 🔎 Χειροκίνητη αναζήτηση"
+)
+
+
+manual_barcode = st.text_input(
+    "Barcode προϊόντος",
+    placeholder="Πληκτρολόγησε το barcode",
+    key="manual_barcode_input"
+)
+
+
+if st.button(
+    "🔎 Αναζήτηση προϊόντος",
+    use_container_width=True
+):
+
+    code = manual_barcode.strip()
+
+
+    # -----------------------------------------------------
+    # ΔΕΝ ΓΡΑΦΤΗΚΕ ΚΩΔΙΚΟΣ
+    # -----------------------------------------------------
+    if not code:
+
+        st.session_state.manual_search_message = (
+            "⚠️ Πληκτρολόγησε πρώτα ένα barcode."
+        )
+
+
+    # -----------------------------------------------------
+    # ΒΡΕΘΗΚΕ ΠΡΟΪΟΝ
+    # -----------------------------------------------------
+    elif code in PRODUCTS:
+
+        st.session_state.current_barcode = code
+
+        st.session_state.manual_search_message = (
+            "✅ Το προϊόν βρέθηκε."
+        )
+
+        st.rerun()
+
+
+    # -----------------------------------------------------
+    # ΔΕΝ ΒΡΕΘΗΚΕ
+    # -----------------------------------------------------
+    else:
+
+        st.session_state.current_barcode = None
+
+        st.session_state.manual_search_message = (
+            "⛔ Ο κωδικός δεν υπάρχει στη βάση προϊόντων."
+        )
+
+        st.rerun()
+
+
+# ---------------------------------------------------------
+# ΜΗΝΥΜΑ ΧΕΙΡΟΚΙΝΗΤΗΣ ΑΝΑΖΗΤΗΣΗΣ
+# ---------------------------------------------------------
+if st.session_state.manual_search_message:
+
+    message = (
+        st.session_state.manual_search_message
+    )
+
+    if message.startswith("✅"):
+
+        st.success(
+            message
+        )
+
+    elif message.startswith("⛔"):
+
+        st.warning(
+            message
+        )
+
+    else:
+
+        st.info(
+            message
+        )
+
+    st.session_state.manual_search_message = ""
+
+
+# ---------------------------------------------------------
 # ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
-    barcode = st.session_state.current_barcode
+    barcode = (
+        st.session_state.current_barcode
+    )
 
-    product = PRODUCTS[barcode]
+    product = PRODUCTS[
+        barcode
+    ]
 
 
-    st.markdown("### 🛒 Προϊόν")
+    st.markdown(
+        "### 🛒 Προϊόν"
+    )
 
     st.markdown(
         f"**{product}**"
@@ -220,23 +344,38 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # MARKET
+    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
         index=0,
-        key=f"market_{st.session_state.entry_counter}"
+        key=(
+            f"market_"
+            f"{st.session_state.entry_counter}"
+        )
     )
 
 
+    # -----------------------------------------------------
+    # ΤΙΜΗ
+    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
         step=0.01,
         format="%.2f",
-        key=f"price_{st.session_state.entry_counter}"
+        key=(
+            f"price_"
+            f"{st.session_state.entry_counter}"
+        )
     )
 
 
+    # -----------------------------------------------------
+    # ΑΠΟΘΗΚΕΥΣΗ
+    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -255,14 +394,30 @@ if st.session_state.current_barcode:
 
             st.session_state.records.append(
                 {
-                    "Ημερομηνία": now.strftime("%d/%m/%Y"),
-                    "Ώρα": now.strftime("%H:%M"),
-                    "Market": market,
-                    "Barcode": barcode,
-                    "Προϊόν": product,
-                    "Τιμή": price,
+                    "Ημερομηνία":
+                        now.strftime(
+                            "%d/%m/%Y"
+                        ),
+
+                    "Ώρα":
+                        now.strftime(
+                            "%H:%M"
+                        ),
+
+                    "Market":
+                        market,
+
+                    "Barcode":
+                        barcode,
+
+                    "Προϊόν":
+                        product,
+
+                    "Τιμή":
+                        price,
                 }
             )
+
 
             st.session_state.current_barcode = None
 
@@ -286,9 +441,11 @@ if st.session_state.records:
         "### 📋 Καταχωρήσεις"
     )
 
+
     df = pd.DataFrame(
         st.session_state.records
     )
+
 
     st.dataframe(
         df,
@@ -302,6 +459,7 @@ if st.session_state.records:
     # -----------------------------------------------------
     output = BytesIO()
 
+
     with pd.ExcelWriter(
         output,
         engine="openpyxl"
@@ -314,20 +472,29 @@ if st.session_state.records:
         )
 
 
-    excel_data = output.getvalue()
+    excel_data = (
+        output.getvalue()
+    )
 
-    excel_base64 = base64.b64encode(
-        excel_data
-    ).decode("utf-8")
+
+    excel_base64 = (
+        base64.b64encode(
+            excel_data
+        ).decode(
+            "utf-8"
+        )
+    )
 
 
     # -----------------------------------------------------
-    # ΚΟΥΜΠΙ EXCEL - ΝΕΑ ΚΑΡΤΕΛΑ
+    # EXCEL ΣΕ ΝΕΑ ΚΑΡΤΕΛΑ
     # -----------------------------------------------------
     excel_href = (
-        "data:application/vnd.openxmlformats-officedocument."
+        "data:"
+        "application/vnd.openxmlformats-officedocument."
         "spreadsheetml.sheet;base64,"
-        + excel_base64
+        +
+        excel_base64
     )
 
 
@@ -340,6 +507,7 @@ if st.session_state.records:
         f'📥 Άνοιγμα / Κατέβασμα Excel'
         f'</a>'
     )
+
 
     st.markdown(
         excel_button,

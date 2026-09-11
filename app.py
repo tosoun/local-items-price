@@ -6,6 +6,8 @@ from io import BytesIO
 from datetime import datetime
 import base64
 
+from supabase import create_client
+
 
 # ---------------------------------------------------------
 # ΡΥΘΜΙΣΕΙΣ
@@ -15,6 +17,21 @@ st.set_page_config(
     page_icon="📱",
     layout="centered"
 )
+
+
+# ---------------------------------------------------------
+# SUPABASE
+# ---------------------------------------------------------
+@st.cache_resource
+def get_supabase():
+
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_KEY"]
+    )
+
+
+supabase = get_supabase()
 
 
 # ---------------------------------------------------------
@@ -392,44 +409,76 @@ if st.session_state.current_barcode:
 
             now = datetime.now()
 
-            st.session_state.records.append(
-                {
-                    "Ημερομηνία":
-                        now.strftime(
-                            "%d/%m/%Y"
-                        ),
 
-                    "Ώρα":
-                        now.strftime(
-                            "%H:%M"
-                        ),
+            # -------------------------------------------------
+            # ΑΠΟΘΗΚΕΥΣΗ ΣΤΟ SUPABASE
+            # -------------------------------------------------
+            try:
 
-                    "Market":
-                        market,
-
-                    "Barcode":
-                        barcode,
-
-                    "Προϊόν":
-                        product,
-
-                    "Τιμή":
-                        price,
-                }
-            )
+                supabase.table(
+                    "price_records"
+                ).insert(
+                    {
+                        "market": market,
+                        "barcode": barcode,
+                        "product": product,
+                        "price": float(price),
+                    }
+                ).execute()
 
 
-            st.session_state.current_barcode = None
+                # -------------------------------------------------
+                # ΤΟΠΙΚΗ ΚΑΤΑΧΩΡΗΣΗ
+                # -------------------------------------------------
+                st.session_state.records.append(
+                    {
+                        "Ημερομηνία":
+                            now.strftime(
+                                "%d/%m/%Y"
+                            ),
 
-            st.session_state.entry_counter += 1
+                        "Ώρα":
+                            now.strftime(
+                                "%H:%M"
+                            ),
 
-            st.session_state.scanner_message = ""
+                        "Market":
+                            market,
 
-            st.session_state.reset_token += 1
+                        "Barcode":
+                            barcode,
 
-            st.session_state.saved_message = True
+                        "Προϊόν":
+                            product,
 
-            st.rerun()
+                        "Τιμή":
+                            price,
+                    }
+                )
+
+
+                st.session_state.current_barcode = None
+
+                st.session_state.entry_counter += 1
+
+                st.session_state.scanner_message = ""
+
+                st.session_state.reset_token += 1
+
+                st.session_state.saved_message = True
+
+                st.rerun()
+
+
+            except Exception as e:
+
+                st.error(
+                    "❌ Δεν έγινε αποθήκευση στη βάση."
+                )
+
+                st.caption(
+                    str(e)
+                )
 
 
 # ---------------------------------------------------------

@@ -76,62 +76,111 @@ body {
     object-fit: cover !important;
 }
 
+
+/* -----------------------------------------------------
+   ΠΛΑΙΣΙΟ ΓΙΑ ΟΡΙΖΟΝΤΙΟ + ΚΑΘΕΤΟ BARCODE
+----------------------------------------------------- */
+
 .frame {
     position: absolute;
     z-index: 100;
-    width: 78%;
-    height: 95px;
+
+    width: 76%;
+    height: 175px;
+
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+
+    transform: translate(
+        -50%,
+        -50%
+    );
+
     border: 3px solid #22c55e;
+
     border-radius: 12px;
+
     pointer-events: none;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,.22);
+
+    box-shadow:
+        0 0 0 9999px
+        rgba(0,0,0,.18);
 }
+
+
+/* -----------------------------------------------------
+   ΚΙΝΟΥΜΕΝΗ ΓΡΑΜΜΗ
+----------------------------------------------------- */
 
 .line {
     position: absolute;
+
     left: 5%;
+
     width: 90%;
+
     height: 3px;
+
     background: #22c55e;
+
     top: 50%;
+
     border-radius: 5px;
-    animation: scan 1.5s ease-in-out infinite;
+
+    animation:
+        scan 1.6s
+        ease-in-out
+        infinite;
 }
+
 
 @keyframes scan {
 
     0% {
-        transform: translateY(-32px);
+        transform:
+            translateY(-68px);
     }
 
     50% {
-        transform: translateY(32px);
+        transform:
+            translateY(68px);
     }
 
     100% {
-        transform: translateY(-32px);
+        transform:
+            translateY(-68px);
     }
 }
 
+
+/* -----------------------------------------------------
+   STATUS
+----------------------------------------------------- */
+
 #status {
     color: white;
+
     background: #1f2937;
+
     text-align: center;
+
     font-weight: 600;
+
     font-size: 14px;
+
     padding: 9px 6px;
 }
+
 
 #status.ready {
     background: #15803d;
 }
 
+
 #status.success {
     background: #16a34a;
 }
+
 
 #status.error {
     background: #b91c1c;
@@ -144,6 +193,7 @@ body {
 
 <body>
 
+
 <div class="scanner">
 
     <div class="title">
@@ -151,24 +201,32 @@ body {
     </div>
 
     <div class="subtitle">
-        Βάλε το barcode μέσα στο πράσινο πλαίσιο
+        Barcode οριζόντια ή κάθετα
     </div>
+
 
     <div class="camera">
 
         <div id="reader"></div>
 
+
         <div class="frame">
+
             <div class="line"></div>
+
         </div>
 
     </div>
 
+
     <div id="status">
+
         ⏳ Εκκίνηση κάμερας...
+
     </div>
 
 </div>
+
 
 
 <script>
@@ -178,54 +236,88 @@ body {
    STREAMLIT
 ===================================================== */
 
-function sendMessage(type, data = {}) {
+function sendMessage(
+    type,
+    data = {}
+) {
 
     window.parent.postMessage(
+
         {
+
             isStreamlitMessage: true,
+
             type: type,
+
             ...data
+
         },
+
         "*"
     );
 }
 
 
+
 function componentReady() {
 
     sendMessage(
+
         "streamlit:componentReady",
+
         {
             apiVersion: 1
         }
+
     );
 }
 
 
-function setFrameHeight(height) {
+
+function setFrameHeight(
+    height
+) {
 
     sendMessage(
+
         "streamlit:setFrameHeight",
+
         {
             height: height
         }
+
     );
 }
 
 
-function sendBarcode(value) {
+
+function sendBarcode(
+    value
+) {
 
     sendMessage(
+
         "streamlit:setComponentValue",
+
         {
+
             value: {
+
                 code: value,
-                scan_id: Date.now()
+
+                scan_id:
+                    Date.now()
+
             },
-            dataType: "json"
+
+            dataType:
+                "json"
+
         }
+
     );
 }
+
 
 
 /* =====================================================
@@ -235,16 +327,24 @@ function sendBarcode(value) {
 let audioContext = null;
 
 
+
 function getAudioContext() {
 
-    if (!audioContext) {
+    if (
+        !audioContext
+    ) {
 
         audioContext =
             new (
+
                 window.AudioContext ||
+
                 window.webkitAudioContext
+
             )();
+
     }
+
 
     if (
         audioContext.state ===
@@ -252,11 +352,18 @@ function getAudioContext() {
     ) {
 
         audioContext.resume();
+
     }
+
 
     return audioContext;
 }
 
+
+
+/* =====================================================
+   SUCCESS BEEP
+===================================================== */
 
 function playSuccessBeep() {
 
@@ -265,41 +372,71 @@ function playSuccessBeep() {
         const ctx =
             getAudioContext();
 
+
         const oscillator =
             ctx.createOscillator();
+
 
         const gain =
             ctx.createGain();
 
+
         oscillator.type =
             "sine";
+
 
         oscillator.frequency.value =
             1100;
 
+
         gain.gain.setValueAtTime(
+
             0.18,
+
             ctx.currentTime
+
         );
+
 
         gain.gain.exponentialRampToValueAtTime(
+
             0.01,
+
             ctx.currentTime + 0.12
+
         );
 
-        oscillator.connect(gain);
 
-        gain.connect(ctx.destination);
+        oscillator.connect(
+            gain
+        );
+
+
+        gain.connect(
+            ctx.destination
+        );
+
 
         oscillator.start();
 
+
         oscillator.stop(
+
             ctx.currentTime + 0.12
+
         );
 
-    } catch (e) {}
+    }
+
+    catch (e) {}
+
 }
 
+
+
+/* =====================================================
+   ERROR BEEP
+===================================================== */
 
 function playErrorBeep() {
 
@@ -309,49 +446,87 @@ function playErrorBeep() {
             getAudioContext();
 
 
-        function beep(startTime) {
+
+        function beep(
+            startTime
+        ) {
 
             const oscillator =
                 ctx.createOscillator();
 
+
             const gain =
                 ctx.createGain();
+
 
             oscillator.type =
                 "square";
 
+
             oscillator.frequency.value =
                 420;
 
+
             gain.gain.setValueAtTime(
+
                 0.12,
+
+                startTime
+
+            );
+
+
+            gain.gain.exponentialRampToValueAtTime(
+
+                0.01,
+
+                startTime + 0.12
+
+            );
+
+
+            oscillator.connect(
+                gain
+            );
+
+
+            gain.connect(
+                ctx.destination
+            );
+
+
+            oscillator.start(
                 startTime
             );
 
-            gain.gain.exponentialRampToValueAtTime(
-                0.01,
-                startTime + 0.12
-            );
-
-            oscillator.connect(gain);
-
-            gain.connect(ctx.destination);
-
-            oscillator.start(startTime);
 
             oscillator.stop(
+
                 startTime + 0.12
+
             );
+
         }
 
-        beep(ctx.currentTime);
+
 
         beep(
-            ctx.currentTime + 0.18
+            ctx.currentTime
         );
 
-    } catch (e) {}
+
+        beep(
+
+            ctx.currentTime + 0.18
+
+        );
+
+    }
+
+    catch (e) {}
+
 }
+
 
 
 /* =====================================================
@@ -369,137 +544,209 @@ let lastResetToken = null;
 let restarting = false;
 
 
+
 /* =====================================================
    STREAMLIT RENDER
 ===================================================== */
 
 window.addEventListener(
+
     "message",
+
     function(event) {
+
 
         const data =
             event.data;
 
+
         if (!data) {
+
             return;
+
         }
+
 
         if (
+
             data.type !==
             "streamlit:render"
+
         ) {
+
             return;
+
         }
 
+
         if (!data.args) {
+
             return;
+
         }
+
 
 
         const newResetToken =
             data.args.reset_token;
 
 
+
         const scannerMessage =
-            data.args.scanner_message || "";
+            data.args.scanner_message ||
+            "";
+
 
 
         if (
+
             lastResetToken === null
+
         ) {
 
             lastResetToken =
                 newResetToken;
 
+
             return;
+
         }
 
 
+
         if (
+
             newResetToken !==
             lastResetToken
+
         ) {
 
             lastResetToken =
                 newResetToken;
 
+
             restartScanner(
+
                 scannerMessage
+
             );
+
         }
 
     }
+
 );
+
 
 
 /* =====================================================
    RESTART SCANNER
 ===================================================== */
 
-async function restartScanner(message = "") {
+async function restartScanner(
+    message = ""
+) {
+
 
     if (restarting) {
+
         return;
+
     }
+
 
     restarting = true;
 
+
+
     const status =
+
         document.getElementById(
             "status"
         );
 
+
+
     scanLocked = false;
+
 
 
     try {
 
+
         if (
+
             scanner &&
+
             scannerRunning
+
         ) {
 
             await scanner.stop();
+
         }
 
-    } catch (e) {}
+
+    }
+
+    catch (e) {}
+
 
 
     scannerRunning = false;
 
 
+
     try {
+
 
         if (scanner) {
 
             scanner.clear();
+
         }
 
-    } catch (e) {}
+
+    }
+
+    catch (e) {}
+
 
 
     scanner = null;
 
 
+
     status.innerHTML =
         "⏳ Εκκίνηση κάμερας...";
 
-    status.className = "";
+
+    status.className =
+        "";
+
 
 
     setTimeout(
+
         async function() {
+
 
             await startCamera(
                 message
             );
 
-            restarting = false;
+
+            restarting =
+                false;
 
         },
+
         300
+
     );
+
 }
+
 
 
 /* =====================================================
@@ -510,51 +757,166 @@ function showReadyMessage(
     message
 ) {
 
+
     const status =
+
         document.getElementById(
             "status"
         );
 
 
+
     if (message) {
+
 
         status.innerHTML =
             message;
 
+
         status.className =
             "ready";
+
 
         playErrorBeep();
 
 
+
         setTimeout(
+
             function() {
 
+
                 if (
+
                     scannerRunning &&
+
                     !scanLocked
+
                 ) {
+
 
                     status.innerHTML =
                         "🟢 Έτοιμο για σάρωση";
 
+
                     status.className =
                         "ready";
+
                 }
 
             },
+
             1500
+
         );
 
-    } else {
+    }
+
+
+    else {
+
 
         status.innerHTML =
             "🟢 Έτοιμο για σάρωση";
 
+
         status.className =
             "ready";
+
     }
+
 }
+
+
+
+/* =====================================================
+   BARCODE FOUND
+===================================================== */
+
+async function barcodeFound(
+    decodedText
+) {
+
+
+    if (scanLocked) {
+
+        return;
+
+    }
+
+
+    scanLocked = true;
+
+
+
+    const status =
+
+        document.getElementById(
+            "status"
+        );
+
+
+
+    status.innerHTML =
+
+        "✅ " +
+        decodedText;
+
+
+
+    status.className =
+        "success";
+
+
+
+    playSuccessBeep();
+
+
+
+    if (
+        navigator.vibrate
+    ) {
+
+
+        navigator.vibrate(
+            100
+        );
+
+    }
+
+
+
+    sendBarcode(
+        decodedText
+    );
+
+
+
+    if (
+
+        scanner &&
+
+        scannerRunning
+
+    ) {
+
+
+        try {
+
+            await scanner.stop();
+
+        }
+
+        catch (e) {}
+
+    }
+
+
+
+    scannerRunning = false;
+
+}
+
 
 
 /* =====================================================
@@ -565,53 +927,85 @@ async function startCamera(
     message = ""
 ) {
 
+
     const status =
+
         document.getElementById(
             "status"
         );
 
 
+
     try {
 
+
         if (
+
             typeof Html5Qrcode ===
             "undefined"
+
         ) {
+
 
             status.innerHTML =
                 "❌ Δεν φορτώθηκε ο barcode scanner.";
 
+
             status.className =
                 "error";
 
+
             return;
+
         }
 
 
+
         scanner =
+
             new Html5Qrcode(
                 "reader"
             );
 
 
+
+        /*
+        ΣΗΜΑΝΤΙΚΟ:
+
+        Δεν χρησιμοποιούμε πλέον
+        στενό qrbox.
+
+        Ο scanner εξετάζει
+        ολόκληρη την εικόνα.
+
+        Έτσι βοηθάμε πολύ
+        τα κάθετα και λοξά barcode.
+        */
+
+
         await scanner.start(
 
+
             {
+
                 facingMode: {
-                    exact: "environment"
+
+                    exact:
+                        "environment"
+
                 }
+
             },
 
-            {
-                fps: 12,
 
-                qrbox: {
-                    width: 260,
-                    height: 95
-                },
+            {
+
+                fps: 15,
+
 
                 aspectRatio:
                     1.777778,
+
 
                 formatsToSupport: [
 
@@ -622,78 +1016,35 @@ async function startCamera(
                     Html5QrcodeSupportedFormats.UPC_A,
 
                     Html5QrcodeSupportedFormats.UPC_E
+
                 ]
-            },
-
-            async function(
-                decodedText
-            ) {
-
-                if (scanLocked) {
-                    return;
-                }
-
-
-                scanLocked =
-                    true;
-
-
-                status.innerHTML =
-                    "✅ " +
-                    decodedText;
-
-
-                status.className =
-                    "success";
-
-
-                playSuccessBeep();
-
-
-                if (
-                    navigator.vibrate
-                ) {
-
-                    navigator.vibrate(
-                        100
-                    );
-                }
-
-
-                sendBarcode(
-                    decodedText
-                );
-
-
-                if (
-                    scanner &&
-                    scannerRunning
-                ) {
-
-                    try {
-
-                        await scanner.stop();
-
-                    } catch (e) {}
-                }
-
-
-                scannerRunning =
-                    false;
 
             },
 
-            function() {}
+
+            barcodeFound,
+
+
+            function() {
+
+                // Δεν βρέθηκε barcode
+                // στο συγκεκριμένο frame.
+
+            }
+
         );
+
 
 
         scannerRunning =
             true;
 
 
+
         showReadyMessage(
             message
         );
+
 
 
         setFrameHeight(
@@ -703,38 +1054,55 @@ async function startCamera(
     }
 
 
+
     catch (error) {
 
+
         console.error(
+
             "Camera exact error:",
+
             error
+
         );
+
+
+
+        /*
+        FALLBACK ΓΙΑ iPHONE
+        */
 
 
         try {
 
+
             scanner =
+
                 new Html5Qrcode(
                     "reader"
                 );
 
 
+
             await scanner.start(
 
+
                 {
+
                     facingMode: {
+
                         ideal:
                             "environment"
+
                     }
+
                 },
 
-                {
-                    fps: 12,
 
-                    qrbox: {
-                        width: 260,
-                        height: 95
-                    },
+                {
+
+                    fps: 15,
+
 
                     formatsToSupport: [
 
@@ -745,81 +1113,30 @@ async function startCamera(
                         Html5QrcodeSupportedFormats.UPC_A,
 
                         Html5QrcodeSupportedFormats.UPC_E
+
                     ]
-                },
-
-                async function(
-                    decodedText
-                ) {
-
-                    if (
-                        scanLocked
-                    ) {
-
-                        return;
-                    }
-
-
-                    scanLocked =
-                        true;
-
-
-                    status.innerHTML =
-                        "✅ " +
-                        decodedText;
-
-
-                    status.className =
-                        "success";
-
-
-                    playSuccessBeep();
-
-
-                    if (
-                        navigator.vibrate
-                    ) {
-
-                        navigator.vibrate(
-                            100
-                        );
-                    }
-
-
-                    sendBarcode(
-                        decodedText
-                    );
-
-
-                    if (
-                        scanner &&
-                        scannerRunning
-                    ) {
-
-                        try {
-
-                            await scanner.stop();
-
-                        } catch (e) {}
-                    }
-
-
-                    scannerRunning =
-                        false;
 
                 },
+
+
+                barcodeFound,
+
 
                 function() {}
+
             );
+
 
 
             scannerRunning =
                 true;
 
 
+
             showReadyMessage(
                 message
             );
+
 
 
             setFrameHeight(
@@ -829,11 +1146,14 @@ async function startCamera(
         }
 
 
+
         catch (error2) {
+
 
             console.error(
                 error2
             );
+
 
 
             status.innerHTML =
@@ -844,60 +1164,75 @@ async function startCamera(
                 "error";
 
         }
+
     }
+
 }
 
 
+
 /* =====================================================
-   iPHONE - ΕΠΙΣΤΡΟΦΗ ΣΤΗΝ ΕΦΑΡΜΟΓΗ
+   iPHONE - ΕΠΙΣΤΡΟΦΗ ΑΠΟ EXCEL
 ===================================================== */
 
-/*
-Όταν το iPhone ανοίξει Excel/preview,
-η κάμερα μπορεί να παγώσει.
-
-Μόλις επιστρέψουμε στη σελίδα,
-ξαναξεκινάμε τον scanner.
-*/
-
 document.addEventListener(
+
     "visibilitychange",
+
     function() {
 
+
         if (
+
             document.visibilityState ===
             "visible"
+
         ) {
 
+
             setTimeout(
+
                 function() {
 
                     restartScanner();
 
                 },
+
                 400
+
             );
+
         }
 
     }
+
 );
 
 
+
 window.addEventListener(
+
     "focus",
+
     function() {
 
+
         setTimeout(
+
             function() {
 
                 restartScanner();
 
             },
+
             400
+
         );
 
     }
+
 );
+
 
 
 /* =====================================================
@@ -906,20 +1241,27 @@ window.addEventListener(
 
 componentReady();
 
+
 setFrameHeight(
     330
 );
 
+
+
 setTimeout(
+
     function() {
 
         startCamera();
 
     },
+
     500
+
 );
 
 </script>
+
 
 </body>
 

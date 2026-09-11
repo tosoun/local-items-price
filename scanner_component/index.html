@@ -258,10 +258,6 @@ function getAudioContext() {
 }
 
 
-/* =====================================================
-   ΕΠΙΤΥΧΗΜΕΝΟ ΜΠΙΠ
-===================================================== */
-
 function playSuccessBeep() {
 
     try {
@@ -275,13 +271,11 @@ function playSuccessBeep() {
         const gain =
             ctx.createGain();
 
-
         oscillator.type =
             "sine";
 
         oscillator.frequency.value =
             1100;
-
 
         gain.gain.setValueAtTime(
             0.18,
@@ -293,15 +287,9 @@ function playSuccessBeep() {
             ctx.currentTime + 0.12
         );
 
+        oscillator.connect(gain);
 
-        oscillator.connect(
-            gain
-        );
-
-        gain.connect(
-            ctx.destination
-        );
-
+        gain.connect(ctx.destination);
 
         oscillator.start();
 
@@ -309,21 +297,9 @@ function playSuccessBeep() {
             ctx.currentTime + 0.12
         );
 
-    }
-
-    catch (e) {
-
-        console.log(
-            "Audio success error:",
-            e
-        );
-    }
+    } catch (e) {}
 }
 
-
-/* =====================================================
-   ERROR ΜΠΙΠ ΜΠΙΠ
-===================================================== */
 
 function playErrorBeep() {
 
@@ -333,9 +309,7 @@ function playErrorBeep() {
             getAudioContext();
 
 
-        function beep(
-            startTime
-        ) {
+        function beep(startTime) {
 
             const oscillator =
                 ctx.createOscillator();
@@ -343,13 +317,11 @@ function playErrorBeep() {
             const gain =
                 ctx.createGain();
 
-
             oscillator.type =
                 "square";
 
             oscillator.frequency.value =
                 420;
-
 
             gain.gain.setValueAtTime(
                 0.12,
@@ -361,43 +333,24 @@ function playErrorBeep() {
                 startTime + 0.12
             );
 
+            oscillator.connect(gain);
 
-            oscillator.connect(
-                gain
-            );
+            gain.connect(ctx.destination);
 
-            gain.connect(
-                ctx.destination
-            );
-
-
-            oscillator.start(
-                startTime
-            );
+            oscillator.start(startTime);
 
             oscillator.stop(
                 startTime + 0.12
             );
         }
 
-
-        beep(
-            ctx.currentTime
-        );
+        beep(ctx.currentTime);
 
         beep(
             ctx.currentTime + 0.18
         );
 
-    }
-
-    catch (e) {
-
-        console.log(
-            "Audio error error:",
-            e
-        );
-    }
+    } catch (e) {}
 }
 
 
@@ -412,6 +365,8 @@ let scannerRunning = false;
 let scanLocked = false;
 
 let lastResetToken = null;
+
+let restarting = false;
 
 
 /* =====================================================
@@ -483,11 +438,16 @@ window.addEventListener(
 
 async function restartScanner(message = "") {
 
+    if (restarting) {
+        return;
+    }
+
+    restarting = true;
+
     const status =
         document.getElementById(
             "status"
         );
-
 
     scanLocked = false;
 
@@ -513,7 +473,6 @@ async function restartScanner(message = "") {
         if (scanner) {
 
             scanner.clear();
-
         }
 
     } catch (e) {}
@@ -529,11 +488,13 @@ async function restartScanner(message = "") {
 
 
     setTimeout(
-        function() {
+        async function() {
 
-            startCamera(
+            await startCamera(
                 message
             );
+
+            restarting = false;
 
         },
         300
@@ -563,7 +524,6 @@ function showReadyMessage(
         status.className =
             "ready";
 
-
         playErrorBeep();
 
 
@@ -586,9 +546,7 @@ function showReadyMessage(
             1500
         );
 
-    }
-
-    else {
+    } else {
 
         status.innerHTML =
             "🟢 Έτοιμο για σάρωση";
@@ -716,9 +674,7 @@ async function startCamera(
 
                         await scanner.stop();
 
-                    }
-
-                    catch (e) {}
+                    } catch (e) {}
                 }
 
 
@@ -727,12 +683,7 @@ async function startCamera(
 
             },
 
-            function() {
-
-                // Αγνοούμε frames χωρίς barcode.
-
-            }
-
+            function() {}
         );
 
 
@@ -755,14 +706,10 @@ async function startCamera(
     catch (error) {
 
         console.error(
-            "Camera error:",
+            "Camera exact error:",
             error
         );
 
-
-        /*
-        FALLBACK ΓΙΑ iPHONE
-        */
 
         try {
 
@@ -853,9 +800,7 @@ async function startCamera(
 
                             await scanner.stop();
 
-                        }
-
-                        catch (e) {}
+                        } catch (e) {}
                     }
 
 
@@ -904,16 +849,66 @@ async function startCamera(
 
 
 /* =====================================================
+   iPHONE - ΕΠΙΣΤΡΟΦΗ ΣΤΗΝ ΕΦΑΡΜΟΓΗ
+===================================================== */
+
+/*
+Όταν το iPhone ανοίξει Excel/preview,
+η κάμερα μπορεί να παγώσει.
+
+Μόλις επιστρέψουμε στη σελίδα,
+ξαναξεκινάμε τον scanner.
+*/
+
+document.addEventListener(
+    "visibilitychange",
+    function() {
+
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
+
+            setTimeout(
+                function() {
+
+                    restartScanner();
+
+                },
+                400
+            );
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "focus",
+    function() {
+
+        setTimeout(
+            function() {
+
+                restartScanner();
+
+            },
+            400
+        );
+
+    }
+);
+
+
+/* =====================================================
    START
 ===================================================== */
 
 componentReady();
 
-
 setFrameHeight(
     330
 );
-
 
 setTimeout(
     function() {

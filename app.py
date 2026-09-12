@@ -64,7 +64,7 @@ iframe {
 
 
 /* =======================================================
-   ΚΑΘΑΡΟ TOP MENU
+   TOP MENU ΧΩΡΙΣ ΠΛΑΙΣΙΟ
 ======================================================= */
 
 div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
@@ -73,7 +73,7 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
     top: 0 !important;
     z-index: 999999 !important;
 
-    background: #ffffff !important;
+    background: transparent !important;
 
     padding-top: 8px !important;
     padding-bottom: 8px !important;
@@ -81,16 +81,17 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
     margin-top: 0 !important;
     margin-bottom: 8px !important;
 
-    border-bottom: 1px solid #e5e7eb !important;
-
-    box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 div[data-testid="stRadio"] {
     position: relative !important;
-    background: white !important;
+    background: transparent !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 div[data-testid="stRadio"] > div {
@@ -98,6 +99,7 @@ div[data-testid="stRadio"] > div {
     flex-direction: row !important;
     align-items: center !important;
     gap: 20px !important;
+    background: transparent !important;
 }
 
 div[data-testid="stRadio"] label {
@@ -105,6 +107,10 @@ div[data-testid="stRadio"] label {
     font-weight: 600 !important;
     margin: 0 !important;
     padding: 4px 0 !important;
+
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 
@@ -434,7 +440,7 @@ page = st.radio(
 
 
 # =========================================================
-# SCANNER = ΧΩΡΙΣ ΚΩΔΙΚΟ
+# SCANNER
 # =========================================================
 if page == "📷 Scanner":
 
@@ -1194,7 +1200,7 @@ if barcode_result:
 
 
 # =========================================================
-# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ - ΜΙΚΡΟΤΕΡΗ
+# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ
 # =========================================================
 st.markdown(
     """

@@ -1532,7 +1532,19 @@ if st.session_state.current_barcode:
 if st.session_state.records:
 
     st.markdown(
-        "### 📋 Καταχωρήσεις"
+        """
+        <div style="
+            font-size:22px;
+            font-weight:700;
+            margin-top:8px;
+            margin-bottom:6px;
+            line-height:1.2;
+            color:#111827;
+        ">
+            📋 Καταχωρήσεις
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 

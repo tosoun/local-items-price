@@ -219,7 +219,7 @@ if "preview_data" not in st.session_state:
     st.session_state.preview_data = []
 
 if "preview_return" not in st.session_state:
-    st.session_state.preview_return = "📋 Τιμές"
+    st.session_state.preview_return = "🗄️ Database"
 
 if "main_page" not in st.session_state:
     st.session_state.main_page = "📷 Scanner"
@@ -369,7 +369,8 @@ if st.session_state.preview_mode:
                         i < binary.length;
                         i++
                     ) {{
-                        bytes[i] = binary.charCodeAt(i);
+                        bytes[i] =
+                            binary.charCodeAt(i);
                     }}
 
                     const blob = new Blob(
@@ -424,7 +425,7 @@ page = st.radio(
     "",
     [
         "📷 Scanner",
-        "📋 Τιμές"
+        "🗄️ Database"
     ],
     horizontal=True,
     label_visibility="collapsed",
@@ -442,9 +443,9 @@ if page == "📷 Scanner":
 
 
 # =========================================================
-# ΣΕΛΙΔΑ ΤΙΜΩΝ
+# DATABASE
 # =========================================================
-if page == "📋 Τιμές":
+if page == "🗄️ Database":
 
     # =====================================================
     # ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ
@@ -452,7 +453,7 @@ if page == "📋 Τιμές":
     if not st.session_state.prices_unlocked:
 
         st.markdown(
-            "## 🔒 Πρόσβαση στις Τιμές"
+            "## 🔒 Πρόσβαση στη Database"
         )
 
         access_code = st.text_input(
@@ -483,7 +484,7 @@ if page == "📋 Τιμές":
 
 
     # =====================================================
-    # ΤΙΜΕΣ
+    # ΚΑΤΑΧΩΡΗΜΕΝΕΣ ΤΙΜΕΣ
     # =====================================================
     st.markdown(
         "## 📋 Καταχωρημένες Τιμές"
@@ -919,7 +920,7 @@ if page == "📋 Τιμές":
                 )
 
                 st.session_state.preview_return = (
-                    "📋 Τιμές"
+                    "🗄️ Database"
                 )
 
                 st.session_state.preview_mode = True
@@ -1193,10 +1194,22 @@ if barcode_result:
 
 
 # =========================================================
-# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ
+# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ - ΜΙΚΡΟΤΕΡΗ
 # =========================================================
 st.markdown(
-    "### 🔎 Χειροκίνητη αναζήτηση"
+    """
+    <div style="
+        font-size:22px;
+        font-weight:700;
+        margin-top:8px;
+        margin-bottom:6px;
+        line-height:1.2;
+        color:#111827;
+    ">
+        🔎 Χειροκίνητη αναζήτηση
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 

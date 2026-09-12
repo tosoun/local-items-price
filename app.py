@@ -293,7 +293,7 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # ΗΜΕΡΟΜΗΝΙΑ
+            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ ΕΛΛΑΔΑΣ
             # -------------------------------------------------
             if "created_at" in df_prices.columns:
 
@@ -312,7 +312,7 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # MARKET FILTER
+            # FILTER MARKET
             # -------------------------------------------------
             if "market" in df_prices.columns:
 
@@ -325,8 +325,11 @@ if page == "📋 Τιμές":
                 )
 
                 market_options = (
-                    ["Όλα"] +
-                    sorted(markets_found)
+                    ["Όλα"]
+                    +
+                    sorted(
+                        markets_found
+                    )
                 )
 
             else:
@@ -417,13 +420,173 @@ if page == "📋 Τιμές":
                 ]
 
 
+            # -------------------------------------------------
+            # ΣΥΝΟΛΟ
+            # -------------------------------------------------
             st.caption(
                 f"Σύνολο: {len(df_prices)} καταχωρήσεις"
             )
 
 
             # -------------------------------------------------
-            # ΚΑΡΤΕΣ
+            # EXCEL ΑΠΟ ΤΑ ΦΙΛΤΡΑΡΙΣΜΕΝΑ ΑΠΟΤΕΛΕΣΜΑΤΑ
+            # -------------------------------------------------
+            export_df = pd.DataFrame()
+
+
+            if "created_at" in df_prices.columns:
+
+                export_df["Ημερομηνία"] = (
+                    df_prices["created_at"]
+                    .dt.strftime(
+                        "%d/%m/%Y"
+                    )
+                )
+
+                export_df["Ώρα"] = (
+                    df_prices["created_at"]
+                    .dt.strftime(
+                        "%H:%M"
+                    )
+                )
+
+            else:
+
+                export_df["Ημερομηνία"] = ""
+
+                export_df["Ώρα"] = ""
+
+
+            if "market" in df_prices.columns:
+
+                export_df["Market"] = (
+                    df_prices["market"]
+                    .fillna("")
+                )
+
+            else:
+
+                export_df["Market"] = ""
+
+
+            if "barcode" in df_prices.columns:
+
+                export_df["Barcode"] = (
+                    df_prices["barcode"]
+                    .fillna("")
+                    .astype(str)
+                )
+
+            else:
+
+                export_df["Barcode"] = ""
+
+
+            if "product" in df_prices.columns:
+
+                export_df["Προϊόν"] = (
+                    df_prices["product"]
+                    .fillna("")
+                )
+
+            else:
+
+                export_df["Προϊόν"] = ""
+
+
+            if "price" in df_prices.columns:
+
+                export_df["Τιμή (€)"] = (
+                    pd.to_numeric(
+                        df_prices["price"],
+                        errors="coerce"
+                    )
+                )
+
+            else:
+
+                export_df["Τιμή (€)"] = ""
+
+
+            # -------------------------------------------------
+            # ΔΗΜΙΟΥΡΓΙΑ EXCEL
+            # -------------------------------------------------
+            excel_output = BytesIO()
+
+
+            with pd.ExcelWriter(
+                excel_output,
+                engine="openpyxl"
+            ) as writer:
+
+                export_df.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name="Τιμές"
+                )
+
+
+                worksheet = (
+                    writer.sheets["Τιμές"]
+                )
+
+
+                # Πλάτη στηλών
+                worksheet.column_dimensions["A"].width = 14
+                worksheet.column_dimensions["B"].width = 10
+                worksheet.column_dimensions["C"].width = 22
+                worksheet.column_dimensions["D"].width = 18
+                worksheet.column_dimensions["E"].width = 45
+                worksheet.column_dimensions["F"].width = 12
+
+
+                # Freeze πρώτη γραμμή
+                worksheet.freeze_panes = "A2"
+
+
+                # Auto filter
+                worksheet.auto_filter.ref = (
+                    worksheet.dimensions
+                )
+
+
+                # Μορφή τιμής
+                for cell in worksheet["F"][1:]:
+
+                    cell.number_format = (
+                        '0.00 "€"'
+                    )
+
+
+            excel_output.seek(0)
+
+
+            # -------------------------------------------------
+            # DOWNLOAD BUTTON
+            # -------------------------------------------------
+            st.download_button(
+                label="📥 Εξαγωγή σε Excel",
+                data=excel_output.getvalue(),
+                file_name=(
+                    "times_"
+                    +
+                    datetime.now().strftime(
+                        "%d-%m-%Y_%H-%M"
+                    )
+                    +
+                    ".xlsx"
+                ),
+                mime=(
+                    "application/"
+                    "vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
+                use_container_width=True
+            )
+
+
+            # -------------------------------------------------
+            # ΚΑΡΤΕΣ ΤΙΜΩΝ
             # -------------------------------------------------
             for _, row in df_prices.iterrows():
 
@@ -513,8 +676,6 @@ if page == "📋 Τιμές":
                         )
 
 
-                # ΠΡΟΣΟΧΗ:
-                # Χωρίς κενά στην αρχή των γραμμών HTML
                 card_html = (
                     '<div class="price-card">'
                     f'<div class="price-product">{product_value}</div>'
@@ -585,7 +746,7 @@ if "manual_search_message" not in st.session_state:
 
 
 # ---------------------------------------------------------
-# ΑΠΟΘΗΚΕΥΤΗΚΕ
+# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
@@ -611,7 +772,7 @@ st.session_state.scanner_message = ""
 
 
 # ---------------------------------------------------------
-# SCANNER RESULT
+# ΕΛΕΓΧΟΣ BARCODE ΑΠΟ SCANNER
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -747,7 +908,7 @@ if st.session_state.manual_search_message:
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ
+# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
@@ -797,7 +958,7 @@ if st.session_state.current_barcode:
 
 
     # -----------------------------------------------------
-    # SAVE
+    # ΑΠΟΘΗΚΕΥΣΗ
     # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
@@ -882,7 +1043,7 @@ if st.session_state.current_barcode:
 
 
 # ---------------------------------------------------------
-# ΚΑΤΑΧΩΡΗΣΕΙΣ ΣΥΝΕΔΡΙΑΣ
+# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
 # ---------------------------------------------------------
 if st.session_state.records:
 

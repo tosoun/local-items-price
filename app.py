@@ -35,7 +35,7 @@ supabase = get_supabase()
 
 
 # ---------------------------------------------------------
-# ΜΙΚΡΑ ΚΕΝΑ
+# CSS
 # ---------------------------------------------------------
 st.markdown(
     """
@@ -115,6 +115,376 @@ MARKETS = [
     "Γαλαξίας",
     "Market In",
 ]
+
+
+# ---------------------------------------------------------
+# ΕΠΙΛΟΓΗ ΣΕΛΙΔΑΣ
+# ---------------------------------------------------------
+page = st.radio(
+    "",
+    [
+        "📷 Scanner",
+        "📋 Τιμές"
+    ],
+    horizontal=True,
+    label_visibility="collapsed"
+)
+
+
+# =========================================================
+# ΣΕΛΙΔΑ ΤΙΜΩΝ
+# =========================================================
+if page == "📋 Τιμές":
+
+    st.markdown(
+        "## 📋 Καταχωρημένες Τιμές"
+    )
+
+
+    # -----------------------------------------------------
+    # ΑΝΑΝΕΩΣΗ
+    # -----------------------------------------------------
+    if st.button(
+        "🔄 Ανανέωση",
+        use_container_width=True
+    ):
+
+        st.rerun()
+
+
+    try:
+
+        # -------------------------------------------------
+        # ΔΙΑΒΑΣΜΑ ΑΠΟ SUPABASE
+        # -------------------------------------------------
+        response = (
+            supabase
+            .table("price_records")
+            .select("*")
+            .order(
+                "created_at",
+                desc=True
+            )
+            .execute()
+        )
+
+
+        rows = response.data
+
+
+        if not rows:
+
+            st.info(
+                "Δεν υπάρχουν ακόμη καταχωρήσεις."
+            )
+
+
+        else:
+
+            df_prices = pd.DataFrame(
+                rows
+            )
+
+
+            # -------------------------------------------------
+            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ ΕΛΛΑΔΑΣ
+            # -------------------------------------------------
+            if "created_at" in df_prices.columns:
+
+                df_prices["created_at"] = pd.to_datetime(
+                    df_prices["created_at"],
+                    utc=True,
+                    errors="coerce"
+                )
+
+                df_prices["created_at"] = (
+                    df_prices["created_at"]
+                    .dt.tz_convert(
+                        "Europe/Athens"
+                    )
+                )
+
+
+            # -------------------------------------------------
+            # ΦΙΛΤΡΟ MARKET
+            # -------------------------------------------------
+            if "market" in df_prices.columns:
+
+                markets_found = (
+                    df_prices["market"]
+                    .dropna()
+                    .astype(str)
+                    .unique()
+                    .tolist()
+                )
+
+                market_options = (
+                    ["Όλα"]
+                    +
+                    sorted(
+                        markets_found
+                    )
+                )
+
+            else:
+
+                market_options = [
+                    "Όλα"
+                ]
+
+
+            selected_market = st.selectbox(
+                "🏪 Market",
+                market_options
+            )
+
+
+            if (
+                selected_market != "Όλα"
+                and
+                "market" in df_prices.columns
+            ):
+
+                df_prices = df_prices[
+                    df_prices["market"]
+                    ==
+                    selected_market
+                ]
+
+
+            # -------------------------------------------------
+            # ΑΝΑΖΗΤΗΣΗ
+            # -------------------------------------------------
+            search_text = st.text_input(
+                "🔎 Αναζήτηση",
+                placeholder="Προϊόν ή barcode"
+            )
+
+
+            if search_text:
+
+                search_text = (
+                    search_text
+                    .strip()
+                    .lower()
+                )
+
+
+                product_search = pd.Series(
+                    False,
+                    index=df_prices.index
+                )
+
+                barcode_search = pd.Series(
+                    False,
+                    index=df_prices.index
+                )
+
+
+                if "product" in df_prices.columns:
+
+                    product_search = (
+                        df_prices["product"]
+                        .fillna("")
+                        .astype(str)
+                        .str.lower()
+                        .str.contains(
+                            search_text,
+                            regex=False
+                        )
+                    )
+
+
+                if "barcode" in df_prices.columns:
+
+                    barcode_search = (
+                        df_prices["barcode"]
+                        .fillna("")
+                        .astype(str)
+                        .str.contains(
+                            search_text,
+                            regex=False
+                        )
+                    )
+
+
+                df_prices = df_prices[
+                    product_search
+                    |
+                    barcode_search
+                ]
+
+
+            # -------------------------------------------------
+            # ΠΛΗΘΟΣ
+            # -------------------------------------------------
+            st.caption(
+                f"Σύνολο: {len(df_prices)} καταχωρήσεις"
+            )
+
+
+            # -------------------------------------------------
+            # ΚΑΡΤΕΣ ΓΙΑ ΚΙΝΗΤΟ
+            # -------------------------------------------------
+            for _, row in df_prices.iterrows():
+
+                product_value = row.get(
+                    "product",
+                    ""
+                )
+
+                market_value = row.get(
+                    "market",
+                    ""
+                )
+
+                barcode_value = row.get(
+                    "barcode",
+                    ""
+                )
+
+                price_value = row.get(
+                    "price",
+                    0
+                )
+
+
+                if pd.isna(product_value):
+                    product_value = ""
+
+                if pd.isna(market_value):
+                    market_value = ""
+
+                if pd.isna(barcode_value):
+                    barcode_value = ""
+
+
+                # ---------------------------------------------
+                # ΤΙΜΗ
+                # ---------------------------------------------
+                try:
+
+                    price_text = (
+                        f"{float(price_value):.2f} €"
+                    )
+
+                except:
+
+                    price_text = str(
+                        price_value
+                    )
+
+
+                # ---------------------------------------------
+                # ΗΜΕΡΟΜΗΝΙΑ
+                # ---------------------------------------------
+                date_text = ""
+
+
+                created_at_value = row.get(
+                    "created_at"
+                )
+
+
+                if (
+                    created_at_value is not None
+                    and
+                    pd.notna(created_at_value)
+                ):
+
+                    try:
+
+                        date_text = (
+                            created_at_value.strftime(
+                                "%d/%m/%Y • %H:%M"
+                            )
+                        )
+
+                    except:
+
+                        date_text = str(
+                            created_at_value
+                        )
+
+
+                # ---------------------------------------------
+                # ΚΑΡΤΑ
+                # ---------------------------------------------
+                st.markdown(
+                    f"""
+<div style="
+    border:1px solid #d1d5db;
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:10px;
+    background:#ffffff;
+">
+
+    <div style="
+        font-size:17px;
+        font-weight:700;
+        color:#111827;
+        line-height:1.25;
+    ">
+        {product_value}
+    </div>
+
+    <div style="
+        font-size:26px;
+        font-weight:800;
+        margin-top:6px;
+        color:#111827;
+    ">
+        {price_text}
+    </div>
+
+    <div style="
+        margin-top:5px;
+        font-size:14px;
+        color:#374151;
+    ">
+        🏪 {market_value}
+    </div>
+
+    <div style="
+        font-size:12px;
+        color:#6b7280;
+        margin-top:5px;
+    ">
+        Barcode: {barcode_value}
+    </div>
+
+    <div style="
+        font-size:12px;
+        color:#6b7280;
+        margin-top:2px;
+    ">
+        🕒 {date_text}
+    </div>
+
+</div>
+""",
+                    unsafe_allow_html=True
+                )
+
+
+    except Exception as e:
+
+        st.error(
+            "❌ Δεν μπόρεσα να φορτώσω τις τιμές."
+        )
+
+        st.caption(
+            str(e)
+        )
+
+
+    st.stop()
+
+
+# =========================================================
+# SCANNER
+# =========================================================
 
 
 # ---------------------------------------------------------
@@ -419,10 +789,17 @@ if st.session_state.current_barcode:
                     "price_records"
                 ).insert(
                     {
-                        "market": market,
-                        "barcode": barcode,
-                        "product": product,
-                        "price": float(price),
+                        "market":
+                            market,
+
+                        "barcode":
+                            barcode,
+
+                        "product":
+                            product,
+
+                        "price":
+                            float(price),
                     }
                 ).execute()
 
@@ -482,7 +859,7 @@ if st.session_state.current_barcode:
 
 
 # ---------------------------------------------------------
-# ΚΑΤΑΧΩΡΗΣΕΙΣ
+# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΗΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
 # ---------------------------------------------------------
 if st.session_state.records:
 

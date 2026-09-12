@@ -93,71 +93,11 @@ footer {
 
 
 /* =======================================================
-   TOP MENU - ΟΧΙ STICKY, ΑΛΛΑ CLICKABLE
+   MENU BUTTONS
 ======================================================= */
 
-div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
-    position: relative !important;
-    top: auto !important;
-    z-index: 1000 !important;
-
-    background: transparent !important;
-
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-
-    margin-top: 0 !important;
-    margin-bottom: 8px !important;
-
-    border: none !important;
-    box-shadow: none !important;
-
-    pointer-events: auto !important;
-}
-
-div[data-testid="stRadio"] {
-    position: relative !important;
-    z-index: 1001 !important;
-
-    background: transparent !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-
-    border: none !important;
-    box-shadow: none !important;
-
-    pointer-events: auto !important;
-}
-
-div[data-testid="stRadio"] > div {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 20px !important;
-
-    background: transparent !important;
-
-    pointer-events: auto !important;
-}
-
-div[data-testid="stRadio"] label {
-    position: relative !important;
-    z-index: 1002 !important;
-
-    font-size: 17px !important;
-    font-weight: 600 !important;
-
-    margin: 0 !important;
-    padding: 4px 0 !important;
-
-    background: transparent !important;
-
-    border: none !important;
-    box-shadow: none !important;
-
-    cursor: pointer !important;
-    pointer-events: auto !important;
+div[data-testid="stButton"] button {
+    touch-action: manipulation !important;
 }
 
 
@@ -272,7 +212,7 @@ if "preview_data" not in st.session_state:
     st.session_state.preview_data = []
 
 if "preview_return" not in st.session_state:
-    st.session_state.preview_return = "🗄️ Database"
+    st.session_state.preview_return = "📷 Scanner"
 
 if "main_page" not in st.session_state:
     st.session_state.main_page = "📷 Scanner"
@@ -409,20 +349,14 @@ if st.session_state.preview_mode:
                 </button>
 
                 <script>
-
                 function openExcel() {{
 
                     const base64 = "{excel_b64}";
                     const binary = atob(base64);
                     const bytes = new Uint8Array(binary.length);
 
-                    for (
-                        let i = 0;
-                        i < binary.length;
-                        i++
-                    ) {{
-                        bytes[i] =
-                            binary.charCodeAt(i);
+                    for (let i = 0; i < binary.length; i++) {{
+                        bytes[i] = binary.charCodeAt(i);
                     }}
 
                     const blob = new Blob(
@@ -433,11 +367,8 @@ if st.session_state.preview_mode:
                         }}
                     );
 
-                    const url =
-                        URL.createObjectURL(blob);
-
-                    const a =
-                        document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
 
                     a.href = url;
                     a.download = "{file_name}";
@@ -453,9 +384,7 @@ if st.session_state.preview_mode:
                         }},
                         5000
                     );
-
                 }}
-
                 </script>
 
             </body>
@@ -468,27 +397,47 @@ if st.session_state.preview_mode:
 
 
 # =========================================================
-# MENU
+# MENU - ΚΑΝΟΝΙΚΑ BUTTONS
 # =========================================================
-page = st.radio(
-    "",
-    [
+col_scanner, col_database = st.columns(2)
+
+with col_scanner:
+
+    if st.button(
         "📷 Scanner",
-        "🗄️ Database"
-    ],
-    horizontal=True,
-    label_visibility="collapsed",
-    key="main_page"
-)
+        use_container_width=True,
+        key="menu_scanner",
+        type=(
+            "primary"
+            if st.session_state.main_page == "📷 Scanner"
+            else "secondary"
+        )
+    ):
+
+        st.session_state.main_page = "📷 Scanner"
+        st.session_state.prices_unlocked = False
+        st.session_state.confirm_delete_all = False
+        st.rerun()
 
 
-# =========================================================
-# SCANNER
-# =========================================================
-if page == "📷 Scanner":
+with col_database:
 
-    st.session_state.prices_unlocked = False
-    st.session_state.confirm_delete_all = False
+    if st.button(
+        "🗄️ Database",
+        use_container_width=True,
+        key="menu_database",
+        type=(
+            "primary"
+            if st.session_state.main_page == "🗄️ Database"
+            else "secondary"
+        )
+    ):
+
+        st.session_state.main_page = "🗄️ Database"
+        st.rerun()
+
+
+page = st.session_state.main_page
 
 
 # =========================================================
@@ -533,16 +482,13 @@ if page == "🗄️ Database":
 
 
     # =====================================================
-    # ΚΑΤΑΧΩΡΗΜΕΝΕΣ ΤΙΜΕΣ
+    # DATABASE ΠΕΡΙΕΧΟΜΕΝΟ
     # =====================================================
     st.markdown(
         "## 📋 Καταχωρημένες Τιμές"
     )
 
 
-    # =====================================================
-    # ΜΗΝΥΜΑ ΔΙΑΓΡΑΦΗΣ
-    # =====================================================
     if st.session_state.delete_success:
 
         st.success(
@@ -552,19 +498,14 @@ if page == "🗄️ Database":
         st.session_state.delete_success = False
 
 
-    # =====================================================
-    # ΑΝΑΝΕΩΣΗ
-    # =====================================================
     if st.button(
         "🔄 Ανανέωση",
-        use_container_width=True
+        use_container_width=True,
+        key="database_refresh"
     ):
         st.rerun()
 
 
-    # =====================================================
-    # DEL
-    # =====================================================
     if st.button(
         "🗑️ DEL – Διαγραφή λίστας",
         use_container_width=True,
@@ -574,9 +515,6 @@ if page == "🗄️ Database":
         st.session_state.confirm_delete_all = True
 
 
-    # =====================================================
-    # ΕΠΙΒΕΒΑΙΩΣΗ DEL
-    # =====================================================
     if st.session_state.confirm_delete_all:
 
         st.warning(
@@ -808,7 +746,8 @@ if page == "🗄️ Database":
             # =================================================
             search_text = st.text_input(
                 "🔎 Αναζήτηση",
-                placeholder="Προϊόν ή barcode"
+                placeholder="Προϊόν ή barcode",
+                key="database_search"
             )
 
 
@@ -959,7 +898,8 @@ if page == "🗄️ Database":
             # =================================================
             if st.button(
                 "📊 Προεπισκόπηση Excel",
-                use_container_width=True
+                use_container_width=True,
+                key="database_excel_preview"
             ):
 
                 st.session_state.preview_data = (
@@ -1239,10 +1179,7 @@ if barcode_result:
         scan_id = barcode
 
 
-    if (
-        scan_id !=
-        st.session_state.last_scan_id
-    ):
+    if scan_id != st.session_state.last_scan_id:
 
         st.session_state.last_scan_id = scan_id
 
@@ -1296,7 +1233,8 @@ manual_barcode = st.text_input(
 
 if st.button(
     "🔎 Αναζήτηση προϊόντος",
-    use_container_width=True
+    use_container_width=True,
+    key="manual_search_button"
 ):
 
     code = manual_barcode.strip()
@@ -1437,7 +1375,8 @@ if st.session_state.current_barcode:
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
-        use_container_width=True
+        use_container_width=True,
+        key="save_price_button"
     ):
 
 

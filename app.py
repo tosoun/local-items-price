@@ -93,11 +93,36 @@ footer {
 
 
 /* =======================================================
-   MENU BUTTONS
+   TOP MENU
+   ΧΩΡΙΣ STICKY / Z-INDEX / POINTER-EVENTS
 ======================================================= */
 
-div[data-testid="stButton"] button {
-    touch-action: manipulation !important;
+div[data-testid="stRadio"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="stRadio"] > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 20px !important;
+    background: transparent !important;
+}
+
+div[data-testid="stRadio"] label {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+
+    margin: 0 !important;
+    padding: 4px 0 !important;
+
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 
@@ -212,7 +237,7 @@ if "preview_data" not in st.session_state:
     st.session_state.preview_data = []
 
 if "preview_return" not in st.session_state:
-    st.session_state.preview_return = "📷 Scanner"
+    st.session_state.preview_return = "🗄️ Database"
 
 if "main_page" not in st.session_state:
     st.session_state.main_page = "📷 Scanner"
@@ -349,6 +374,7 @@ if st.session_state.preview_mode:
                 </button>
 
                 <script>
+
                 function openExcel() {{
 
                     const base64 = "{excel_b64}";
@@ -368,6 +394,7 @@ if st.session_state.preview_mode:
                     );
 
                     const url = URL.createObjectURL(blob);
+
                     const a = document.createElement("a");
 
                     a.href = url;
@@ -385,6 +412,7 @@ if st.session_state.preview_mode:
                         5000
                     );
                 }}
+
                 </script>
 
             </body>
@@ -397,47 +425,27 @@ if st.session_state.preview_mode:
 
 
 # =========================================================
-# MENU - ΚΑΝΟΝΙΚΑ BUTTONS
+# TOP MENU
 # =========================================================
-col_scanner, col_database = st.columns(2)
-
-with col_scanner:
-
-    if st.button(
+page = st.radio(
+    "",
+    [
         "📷 Scanner",
-        use_container_width=True,
-        key="menu_scanner",
-        type=(
-            "primary"
-            if st.session_state.main_page == "📷 Scanner"
-            else "secondary"
-        )
-    ):
-
-        st.session_state.main_page = "📷 Scanner"
-        st.session_state.prices_unlocked = False
-        st.session_state.confirm_delete_all = False
-        st.rerun()
+        "🗄️ Database"
+    ],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="main_page"
+)
 
 
-with col_database:
+# =========================================================
+# ΑΝ ΠΑΜΕ SCANNER
+# =========================================================
+if page == "📷 Scanner":
 
-    if st.button(
-        "🗄️ Database",
-        use_container_width=True,
-        key="menu_database",
-        type=(
-            "primary"
-            if st.session_state.main_page == "🗄️ Database"
-            else "secondary"
-        )
-    ):
-
-        st.session_state.main_page = "🗄️ Database"
-        st.rerun()
-
-
-page = st.session_state.main_page
+    st.session_state.prices_unlocked = False
+    st.session_state.confirm_delete_all = False
 
 
 # =========================================================
@@ -482,7 +490,7 @@ if page == "🗄️ Database":
 
 
     # =====================================================
-    # DATABASE ΠΕΡΙΕΧΟΜΕΝΟ
+    # ΚΑΤΑΧΩΡΗΜΕΝΕΣ ΤΙΜΕΣ
     # =====================================================
     st.markdown(
         "## 📋 Καταχωρημένες Τιμές"
@@ -498,6 +506,9 @@ if page == "🗄️ Database":
         st.session_state.delete_success = False
 
 
+    # =====================================================
+    # ΑΝΑΝΕΩΣΗ
+    # =====================================================
     if st.button(
         "🔄 Ανανέωση",
         use_container_width=True,
@@ -506,6 +517,9 @@ if page == "🗄️ Database":
         st.rerun()
 
 
+    # =====================================================
+    # DEL
+    # =====================================================
     if st.button(
         "🗑️ DEL – Διαγραφή λίστας",
         use_container_width=True,
@@ -515,6 +529,9 @@ if page == "🗄️ Database":
         st.session_state.confirm_delete_all = True
 
 
+    # =====================================================
+    # ΕΠΙΒΕΒΑΙΩΣΗ DEL
+    # =====================================================
     if st.session_state.confirm_delete_all:
 
         st.warning(
@@ -633,7 +650,7 @@ if page == "🗄️ Database":
 
 
             # =================================================
-            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ
+            # ΩΡΑ ΕΛΛΑΔΑΣ
             # =================================================
             if "created_at" in df_prices.columns:
 
@@ -894,7 +911,7 @@ if page == "🗄️ Database":
 
 
             # =================================================
-            # EXCEL PREVIEW
+            # EXCEL
             # =================================================
             if st.button(
                 "📊 Προεπισκόπηση Excel",
@@ -918,7 +935,7 @@ if page == "🗄️ Database":
 
 
             # =================================================
-            # ΚΑΡΤΕΣ
+            # MOBILE CARDS
             # =================================================
             for _, row in df_prices.iterrows():
 
@@ -1100,7 +1117,7 @@ if "manual_search_message" not in st.session_state:
 
 
 # =========================================================
-# ΜΗΝΥΜΑ ΕΠΙΤΥΧΙΑΣ
+# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
 # =========================================================
 if st.session_state.saved_message:
 
@@ -1186,9 +1203,7 @@ if barcode_result:
 
         if barcode in PRODUCTS:
 
-            st.session_state.current_barcode = (
-                barcode
-            )
+            st.session_state.current_barcode = barcode
 
 
         else:
@@ -1302,9 +1317,7 @@ if st.session_state.manual_search_message:
 # =========================================================
 if st.session_state.current_barcode:
 
-    barcode = (
-        st.session_state.current_barcode
-    )
+    barcode = st.session_state.current_barcode
 
     product = PRODUCTS[
         barcode

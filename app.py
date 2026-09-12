@@ -48,20 +48,24 @@ st.markdown(
     padding-bottom: 1rem !important;
 }
 
+
 /* Μικρότερα κενά */
 div[data-testid="stVerticalBlock"] {
     gap: 0.5rem !important;
 }
+
 
 div[data-testid="stAlert"] {
     margin-top: 0.2rem !important;
     margin-bottom: 0.2rem !important;
 }
 
+
 hr {
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
 }
+
 
 iframe {
     display: block !important;
@@ -70,36 +74,54 @@ iframe {
 
 
 /* -------------------------------------------------------
-   STICKY MENU - Scanner / Τιμές
+   ΜΟΝΙΜΟ MENU - Scanner / Τιμές
 ------------------------------------------------------- */
-div[data-testid="stRadio"] {
+
+/* Κολλάμε ΟΛΟ το Streamlit container που έχει το radio */
+div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
     position: sticky !important;
+    position: -webkit-sticky !important;
+
     top: 0 !important;
-    z-index: 9999 !important;
 
-    background: rgba(255,255,255,0.98) !important;
+    z-index: 999999 !important;
 
-    padding: 8px 6px 10px 6px !important;
+    background: #ffffff !important;
+
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+
     margin-top: 0 !important;
     margin-bottom: 8px !important;
 
     border-bottom: 1px solid #e5e7eb !important;
 
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
 }
 
 
-/* Κρατάμε τις επιλογές σε μία γραμμή */
+/* Το ίδιο το radio δεν είναι sticky */
+div[data-testid="stRadio"] {
+    position: relative !important;
+    top: auto !important;
+
+    background: #ffffff !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
+/* Scanner / Τιμές στην ίδια γραμμή */
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
-    gap: 18px !important;
     align-items: center !important;
+    gap: 18px !important;
 }
 
 
-/* Μέγεθος κειμένου menu */
+/* Κείμενο menu */
 div[data-testid="stRadio"] label {
     font-size: 17px !important;
     font-weight: 600 !important;
@@ -111,6 +133,7 @@ div[data-testid="stRadio"] label {
     display: block;
     width: 100%;
     text-align: center;
+
     padding: 12px 16px;
     margin-top: 8px;
 
@@ -125,6 +148,7 @@ div[data-testid="stRadio"] label {
 
     text-decoration: none !important;
 }
+
 
 .excel-button:hover {
     background: #f3f4f6;
@@ -176,7 +200,9 @@ page = st.radio(
 # =========================================================
 if page == "📋 Τιμές":
 
-    st.markdown("## 📋 Καταχωρημένες Τιμές")
+    st.markdown(
+        "## 📋 Καταχωρημένες Τιμές"
+    )
 
 
     if st.button(
@@ -212,9 +238,14 @@ if page == "📋 Τιμές":
 
         else:
 
-            df_prices = pd.DataFrame(rows)
+            df_prices = pd.DataFrame(
+                rows
+            )
 
 
+            # -------------------------------------------------
+            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ ΕΛΛΑΔΑΣ
+            # -------------------------------------------------
             if "created_at" in df_prices.columns:
 
                 df_prices["created_at"] = pd.to_datetime(
@@ -231,6 +262,9 @@ if page == "📋 Τιμές":
                 )
 
 
+            # -------------------------------------------------
+            # ΦΙΛΤΡΟ MARKET
+            # -------------------------------------------------
             if "market" in df_prices.columns:
 
                 markets_found = (
@@ -241,10 +275,12 @@ if page == "📋 Τιμές":
                     .tolist()
                 )
 
-                market_options = [
-                    "Όλα"
-                ] + sorted(
-                    markets_found
+                market_options = (
+                    ["Όλα"]
+                    +
+                    sorted(
+                        markets_found
+                    )
                 )
 
             else:
@@ -273,6 +309,9 @@ if page == "📋 Τιμές":
                 ]
 
 
+            # -------------------------------------------------
+            # ΑΝΑΖΗΤΗΣΗ
+            # -------------------------------------------------
             search_text = st.text_input(
                 "🔎 Αναζήτηση",
                 placeholder="Προϊόν ή barcode"
@@ -333,11 +372,17 @@ if page == "📋 Τιμές":
                 ]
 
 
+            # -------------------------------------------------
+            # ΠΛΗΘΟΣ
+            # -------------------------------------------------
             st.caption(
                 f"Σύνολο: {len(df_prices)} καταχωρήσεις"
             )
 
 
+            # -------------------------------------------------
+            # ΚΑΡΤΕΣ ΚΙΝΗΤΟΥ
+            # -------------------------------------------------
             for _, row in df_prices.iterrows():
 
                 product_value = row.get(
@@ -371,17 +416,27 @@ if page == "📋 Τιμές":
                     barcode_value = ""
 
 
+                # ---------------------------------------------
+                # ΤΙΜΗ
+                # ---------------------------------------------
                 try:
+
                     price_text = (
                         f"{float(price_value):.2f} €"
                     )
+
                 except:
+
                     price_text = str(
                         price_value
                     )
 
 
+                # ---------------------------------------------
+                # ΗΜΕΡΟΜΗΝΙΑ
+                # ---------------------------------------------
                 date_text = ""
+
 
                 created_at_value = row.get(
                     "created_at"
@@ -395,17 +450,23 @@ if page == "📋 Τιμές":
                 ):
 
                     try:
+
                         date_text = (
                             created_at_value.strftime(
                                 "%d/%m/%Y • %H:%M"
                             )
                         )
+
                     except:
+
                         date_text = str(
                             created_at_value
                         )
 
 
+                # ---------------------------------------------
+                # ΚΑΡΤΑ
+                # ---------------------------------------------
                 st.markdown(
                     f"""
 <div style="
@@ -584,11 +645,17 @@ if barcode_result:
         st.session_state.last_scan_id = scan_id
 
 
+        # -------------------------------------------------
+        # ΤΟ ΠΡΟΪΟΝ ΥΠΑΡΧΕΙ
+        # -------------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
 
 
+        # -------------------------------------------------
+        # ΤΟ ΠΡΟΪΟΝ ΔΕΝ ΥΠΑΡΧΕΙ
+        # -------------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -603,7 +670,7 @@ if barcode_result:
 
 
 # ---------------------------------------------------------
-# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ BARCODE
+# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ
 # ---------------------------------------------------------
 st.markdown(
     "### 🔎 Χειροκίνητη αναζήτηση"
@@ -655,7 +722,7 @@ if st.button(
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΧΕΙΡΟΚΙΝΗΤΗΣ ΑΝΑΖΗΤΗΣΗΣ
+# ΜΗΝΥΜΑ ΑΝΑΖΗΤΗΣΗΣ
 # ---------------------------------------------------------
 if st.session_state.manual_search_message:
 
@@ -663,11 +730,13 @@ if st.session_state.manual_search_message:
         st.session_state.manual_search_message
     )
 
+
     if message.startswith("✅"):
 
         st.success(
             message
         )
+
 
     elif message.startswith("⛔"):
 
@@ -675,11 +744,13 @@ if st.session_state.manual_search_message:
             message
         )
 
+
     else:
 
         st.info(
             message
         )
+
 
     st.session_state.manual_search_message = ""
 
@@ -711,6 +782,9 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # MARKET
+    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
@@ -722,6 +796,9 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # ΤΙΜΗ
+    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -734,6 +811,9 @@ if st.session_state.current_barcode:
     )
 
 
+    # -----------------------------------------------------
+    # ΑΠΟΘΗΚΕΥΣΗ
+    # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -757,14 +837,24 @@ if st.session_state.current_barcode:
                     "price_records"
                 ).insert(
                     {
-                        "market": market,
-                        "barcode": barcode,
-                        "product": product,
-                        "price": float(price),
+                        "market":
+                            market,
+
+                        "barcode":
+                            barcode,
+
+                        "product":
+                            product,
+
+                        "price":
+                            float(price),
                     }
                 ).execute()
 
 
+                # -------------------------------------------------
+                # ΤΟΠΙΚΗ ΚΑΤΑΧΩΡΗΣΗ
+                # -------------------------------------------------
                 st.session_state.records.append(
                     {
                         "Ημερομηνία":
@@ -817,7 +907,7 @@ if st.session_state.current_barcode:
 
 
 # ---------------------------------------------------------
-# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΗΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
+# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
 # ---------------------------------------------------------
 if st.session_state.records:
 
@@ -838,6 +928,9 @@ if st.session_state.records:
     )
 
 
+    # -----------------------------------------------------
+    # EXCEL
+    # -----------------------------------------------------
     output = BytesIO()
 
 
@@ -853,9 +946,7 @@ if st.session_state.records:
         )
 
 
-    excel_data = (
-        output.getvalue()
-    )
+    excel_data = output.getvalue()
 
 
     excel_base64 = (

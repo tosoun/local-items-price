@@ -116,12 +116,9 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
 
 div[data-testid="stRadio"] {
     position: relative !important;
-
     background: transparent !important;
-
     margin: 0 !important;
     padding: 0 !important;
-
     border: none !important;
     box-shadow: none !important;
 }
@@ -130,21 +127,16 @@ div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-
     gap: 20px !important;
-
     background: transparent !important;
 }
 
 div[data-testid="stRadio"] label {
     font-size: 17px !important;
     font-weight: 600 !important;
-
     margin: 0 !important;
     padding: 4px 0 !important;
-
     background: transparent !important;
-
     border: none !important;
     box-shadow: none !important;
 }
@@ -157,14 +149,10 @@ div[data-testid="stRadio"] label {
 .price-card {
     border: 1px solid #d8dde5;
     border-radius: 14px;
-
     padding: 14px 15px;
-
     margin-top: 4px;
     margin-bottom: 10px;
-
     background: #ffffff;
-
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
@@ -178,41 +166,31 @@ div[data-testid="stRadio"] label {
 .price-value {
     font-size: 27px;
     font-weight: 800;
-
     margin-top: 7px;
-
     color: #111827;
 }
 
 .price-market {
     margin-top: 7px;
-
     font-size: 15px;
-
     color: #374151;
 }
 
 .price-city {
     margin-top: 4px;
-
     font-size: 14px;
-
     color: #374151;
 }
 
 .price-barcode {
     margin-top: 5px;
-
     font-size: 13px;
-
     color: #6b7280;
 }
 
 .price-date {
     margin-top: 2px;
-
     font-size: 13px;
-
     color: #6b7280;
 }
 
@@ -291,7 +269,7 @@ if "delete_success" not in st.session_state:
 
 
 # =========================================================
-# ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
+# ΠΡΟΕΠΙΣΚΟΠΗΣΗ
 # =========================================================
 if st.session_state.preview_mode:
 
@@ -955,10 +933,10 @@ if page == "🗄️ Database":
 
 
             # =================================================
-            # EXCEL PREVIEW
+            # PREVIEW
             # =================================================
             if st.button(
-                "📊 Προεπισκόπηση Excel",
+                "📊 Προεπισκόπηση",
                 use_container_width=True,
                 key="database_excel_preview"
             ):
@@ -1573,7 +1551,7 @@ if st.session_state.records:
 
 
     if st.button(
-        "📊 Προεπισκόπηση Excel",
+        "📊 Προεπισκόπηση",
         use_container_width=True,
         key="scanner_excel_preview"
     ):

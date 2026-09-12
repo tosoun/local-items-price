@@ -64,6 +64,35 @@ iframe {
 
 
 /* =======================================================
+   ΚΡΥΨΙΜΟ STREAMLIT TOOLBAR / FORK / GITHUB / MENU
+======================================================= */
+
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
+[data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+header[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
+#MainMenu {
+    visibility: hidden !important;
+}
+
+footer {
+    visibility: hidden !important;
+}
+
+
+/* =======================================================
    TOP MENU ΧΩΡΙΣ ΠΛΑΙΣΙΟ
 ======================================================= */
 

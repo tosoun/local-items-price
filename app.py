@@ -64,7 +64,7 @@ iframe {
 
 
 /* =======================================================
-   ΚΡΥΨΙΜΟ STREAMLIT TOOLBAR / FORK / GITHUB / MENU
+   ΚΡΥΨΙΜΟ STREAMLIT TOOLBAR
 ======================================================= */
 
 [data-testid="stToolbar"] {
@@ -94,13 +94,34 @@ footer {
 
 /* =======================================================
    TOP MENU
-   ΧΩΡΙΣ STICKY / Z-INDEX / POINTER-EVENTS
 ======================================================= */
 
+div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999999 !important;
+
+    background: transparent !important;
+
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+
+    border: none !important;
+    box-shadow: none !important;
+}
+
 div[data-testid="stRadio"] {
+    position: relative !important;
+
+    background: transparent !important;
+
     margin: 0 !important;
     padding: 0 !important;
-    background: transparent !important;
+
     border: none !important;
     box-shadow: none !important;
 }
@@ -109,7 +130,9 @@ div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
+
     gap: 20px !important;
+
     background: transparent !important;
 }
 
@@ -121,22 +144,27 @@ div[data-testid="stRadio"] label {
     padding: 4px 0 !important;
 
     background: transparent !important;
+
     border: none !important;
     box-shadow: none !important;
 }
 
 
 /* =======================================================
-   ΚΑΡΤΕΣ ΤΙΜΩΝ
+   ΚΑΡΤΕΣ DATABASE
 ======================================================= */
 
 .price-card {
     border: 1px solid #d8dde5;
     border-radius: 14px;
+
     padding: 14px 15px;
+
     margin-top: 4px;
     margin-bottom: 10px;
+
     background: #ffffff;
+
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
@@ -150,31 +178,41 @@ div[data-testid="stRadio"] label {
 .price-value {
     font-size: 27px;
     font-weight: 800;
+
     margin-top: 7px;
+
     color: #111827;
 }
 
 .price-market {
     margin-top: 7px;
+
     font-size: 15px;
+
     color: #374151;
 }
 
 .price-city {
     margin-top: 4px;
+
     font-size: 14px;
+
     color: #374151;
 }
 
 .price-barcode {
     margin-top: 5px;
+
     font-size: 13px;
+
     color: #6b7280;
 }
 
 .price-date {
     margin-top: 2px;
+
     font-size: 13px;
+
     color: #6b7280;
 }
 
@@ -257,20 +295,29 @@ if "delete_success" not in st.session_state:
 # =========================================================
 if st.session_state.preview_mode:
 
-    st.markdown("## 📊 Προεπισκόπηση Excel")
+    st.markdown(
+        "## 📊 Προεπισκόπηση Excel"
+    )
 
     if st.button(
         "⬅️ Επιστροφή στην εφαρμογή",
         use_container_width=True,
         type="primary"
     ):
+
         st.session_state.preview_mode = False
-        st.session_state.main_page = st.session_state.preview_return
+
+        st.session_state.main_page = (
+            st.session_state.preview_return
+        )
+
         st.rerun()
+
 
     preview_df = pd.DataFrame(
         st.session_state.preview_data
     )
+
 
     if preview_df.empty:
 
@@ -278,11 +325,13 @@ if st.session_state.preview_mode:
             "Δεν υπάρχουν δεδομένα για προεπισκόπηση."
         )
 
+
     else:
 
         st.caption(
             f"Σύνολο: {len(preview_df)} καταχωρήσεις"
         )
+
 
         st.dataframe(
             preview_df,
@@ -290,7 +339,9 @@ if st.session_state.preview_mode:
             hide_index=True
         )
 
+
         preview_output = BytesIO()
+
 
         with pd.ExcelWriter(
             preview_output,
@@ -303,15 +354,28 @@ if st.session_state.preview_mode:
                 sheet_name="Τιμές"
             )
 
-            worksheet = writer.sheets["Τιμές"]
+
+            worksheet = writer.sheets[
+                "Τιμές"
+            ]
+
 
             worksheet.freeze_panes = "A2"
-            worksheet.auto_filter.ref = worksheet.dimensions
+
+            worksheet.auto_filter.ref = (
+                worksheet.dimensions
+            )
+
 
             for column_cells in worksheet.columns:
 
                 max_length = 0
-                column_letter = column_cells[0].column_letter
+
+                column_letter = (
+                    column_cells[0]
+                    .column_letter
+                )
+
 
                 for cell in column_cells:
 
@@ -326,30 +390,46 @@ if st.session_state.preview_mode:
                         len(value)
                     )
 
+
                 worksheet.column_dimensions[
                     column_letter
                 ].width = min(
-                    max(max_length + 2, 10),
+                    max(
+                        max_length + 2,
+                        10
+                    ),
                     45
                 )
 
+
         preview_output.seek(0)
 
-        excel_bytes = preview_output.getvalue()
 
-        excel_b64 = base64.b64encode(
-            excel_bytes
-        ).decode("utf-8")
+        excel_bytes = (
+            preview_output.getvalue()
+        )
+
+
+        excel_b64 = (
+            base64
+            .b64encode(excel_bytes)
+            .decode("utf-8")
+        )
+
 
         file_name = (
             "times_"
-            + datetime.now().strftime("%d-%m-%Y_%H-%M")
+            + datetime.now().strftime(
+                "%d-%m-%Y_%H-%M"
+            )
             + ".xlsx"
         )
+
 
         components.html(
             f"""
             <html>
+
             <body style="
                 margin:0;
                 padding:0;
@@ -361,71 +441,130 @@ if st.session_state.preview_mode:
                     style="
                         width:100%;
                         padding:14px;
+
                         font-size:16px;
                         font-weight:600;
-                        border:1px solid #d1d5db;
+
+                        border:
+                        1px solid #d1d5db;
+
                         border-radius:8px;
+
                         background:white;
+
                         color:#111827;
+
                         cursor:pointer;
                     "
                 >
+
                     📥 Άνοιγμα Excel σε νέα καρτέλα
+
                 </button>
+
 
                 <script>
 
                 function openExcel() {{
 
-                    const base64 = "{excel_b64}";
-                    const binary = atob(base64);
-                    const bytes = new Uint8Array(binary.length);
+                    const base64 =
+                        "{excel_b64}";
 
-                    for (let i = 0; i < binary.length; i++) {{
-                        bytes[i] = binary.charCodeAt(i);
+
+                    const binary =
+                        atob(base64);
+
+
+                    const bytes =
+                        new Uint8Array(
+                            binary.length
+                        );
+
+
+                    for (
+                        let i = 0;
+                        i < binary.length;
+                        i++
+                    ) {{
+
+                        bytes[i] =
+                            binary.charCodeAt(i);
+
                     }}
 
-                    const blob = new Blob(
-                        [bytes],
-                        {{
-                            type:
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        }}
-                    );
 
-                    const url = URL.createObjectURL(blob);
+                    const blob =
+                        new Blob(
+                            [bytes],
+                            {{
+                                type:
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            }}
+                        );
 
-                    const a = document.createElement("a");
+
+                    const url =
+                        URL.createObjectURL(
+                            blob
+                        );
+
+
+                    const a =
+                        document.createElement(
+                            "a"
+                        );
+
 
                     a.href = url;
-                    a.download = "{file_name}";
-                    a.target = "_blank";
 
-                    document.body.appendChild(a);
+                    a.download =
+                        "{file_name}";
+
+                    a.target =
+                        "_blank";
+
+
+                    document.body
+                        .appendChild(a);
+
+
                     a.click();
-                    document.body.removeChild(a);
+
+
+                    document.body
+                        .removeChild(a);
+
 
                     setTimeout(
                         () => {{
-                            URL.revokeObjectURL(url);
+
+                            URL.revokeObjectURL(
+                                url
+                            );
+
                         }},
                         5000
                     );
+
                 }}
 
                 </script>
 
+
             </body>
+
             </html>
             """,
+
             height=65
         )
+
 
     st.stop()
 
 
 # =========================================================
-# TOP MENU
+# MENU
 # =========================================================
 page = st.radio(
     "",
@@ -440,11 +579,12 @@ page = st.radio(
 
 
 # =========================================================
-# ΑΝ ΠΑΜΕ SCANNER
+# RESET DATABASE LOCK
 # =========================================================
 if page == "📷 Scanner":
 
     st.session_state.prices_unlocked = False
+
     st.session_state.confirm_delete_all = False
 
 
@@ -453,8 +593,9 @@ if page == "📷 Scanner":
 # =========================================================
 if page == "🗄️ Database":
 
+
     # =====================================================
-    # ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ
+    # ΚΩΔΙΚΟΣ
     # =====================================================
     if not st.session_state.prices_unlocked:
 
@@ -462,11 +603,13 @@ if page == "🗄️ Database":
             "## 🔒 Πρόσβαση στη Database"
         )
 
+
         access_code = st.text_input(
             "🔑 Κωδικός πρόσβασης",
             type="password",
             key="prices_access_code"
         )
+
 
         if st.button(
             "🔓 Είσοδος",
@@ -475,10 +618,13 @@ if page == "🗄️ Database":
             key="prices_login_button"
         ):
 
+
             if access_code == "2845":
 
                 st.session_state.prices_unlocked = True
+
                 st.rerun()
+
 
             else:
 
@@ -486,11 +632,12 @@ if page == "🗄️ Database":
                     "❌ Λάθος κωδικός."
                 )
 
+
         st.stop()
 
 
     # =====================================================
-    # ΚΑΤΑΧΩΡΗΜΕΝΕΣ ΤΙΜΕΣ
+    # DATABASE
     # =====================================================
     st.markdown(
         "## 📋 Καταχωρημένες Τιμές"
@@ -507,18 +654,18 @@ if page == "🗄️ Database":
 
 
     # =====================================================
-    # ΑΝΑΝΕΩΣΗ
+    # REFRESH
     # =====================================================
     if st.button(
         "🔄 Ανανέωση",
-        use_container_width=True,
-        key="database_refresh"
+        use_container_width=True
     ):
+
         st.rerun()
 
 
     # =====================================================
-    # DEL
+    # DELETE
     # =====================================================
     if st.button(
         "🗑️ DEL – Διαγραφή λίστας",
@@ -529,16 +676,17 @@ if page == "🗄️ Database":
         st.session_state.confirm_delete_all = True
 
 
-    # =====================================================
-    # ΕΠΙΒΕΒΑΙΩΣΗ DEL
-    # =====================================================
     if st.session_state.confirm_delete_all:
 
         st.warning(
             "⚠️ ΠΡΟΣΟΧΗ: Θα διαγραφούν ΟΛΕΣ οι καταχωρήσεις από το Supabase."
         )
 
-        col_cancel, col_delete = st.columns(2)
+
+        col_cancel, col_delete = st.columns(
+            2
+        )
+
 
         with col_cancel:
 
@@ -549,6 +697,7 @@ if page == "🗄️ Database":
             ):
 
                 st.session_state.confirm_delete_all = False
+
                 st.rerun()
 
 
@@ -560,6 +709,7 @@ if page == "🗄️ Database":
                 use_container_width=True,
                 key="confirm_delete_all_button"
             ):
+
 
                 try:
 
@@ -573,10 +723,13 @@ if page == "🗄️ Database":
 
                     check_response = (
                         supabase
-                        .table("price_records")
+                        .table(
+                            "price_records"
+                        )
                         .select("id")
                         .execute()
                     )
+
 
                     remaining_rows = (
                         check_response.data
@@ -585,22 +738,29 @@ if page == "🗄️ Database":
                     )
 
 
-                    if len(remaining_rows) == 0:
+                    if len(
+                        remaining_rows
+                    ) == 0:
 
                         st.session_state.confirm_delete_all = False
 
+
                         if "records" in st.session_state:
+
                             st.session_state.records = []
+
 
                         st.session_state.delete_success = True
 
                         st.rerun()
+
 
                     else:
 
                         st.error(
                             "❌ Η διαγραφή δεν ολοκληρώθηκε στη βάση."
                         )
+
 
                         st.warning(
                             f"Παραμένουν {len(remaining_rows)} καταχωρήσεις."
@@ -619,13 +779,15 @@ if page == "🗄️ Database":
 
 
     # =====================================================
-    # ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ
+    # DATA
     # =====================================================
     try:
 
         response = (
             supabase
-            .table("price_records")
+            .table(
+                "price_records"
+            )
             .select("*")
             .order(
                 "created_at",
@@ -633,6 +795,7 @@ if page == "🗄️ Database":
             )
             .execute()
         )
+
 
         rows = response.data
 
@@ -646,28 +809,44 @@ if page == "🗄️ Database":
 
         else:
 
-            df_prices = pd.DataFrame(rows)
+            df_prices = (
+                pd.DataFrame(
+                    rows
+                )
+            )
 
 
             # =================================================
-            # ΩΡΑ ΕΛΛΑΔΑΣ
+            # ΩΡΑ
             # =================================================
             if "created_at" in df_prices.columns:
 
-                df_prices["created_at"] = pd.to_datetime(
-                    df_prices["created_at"],
+                df_prices[
+                    "created_at"
+                ] = pd.to_datetime(
+                    df_prices[
+                        "created_at"
+                    ],
                     utc=True,
                     errors="coerce"
                 )
 
-                df_prices["created_at"] = (
-                    df_prices["created_at"]
-                    .dt.tz_convert("Europe/Athens")
+
+                df_prices[
+                    "created_at"
+                ] = (
+                    df_prices[
+                        "created_at"
+                    ]
+                    .dt
+                    .tz_convert(
+                        "Europe/Athens"
+                    )
                 )
 
 
             # =================================================
-            # MARKET FILTER
+            # MARKET
             # =================================================
             if "market" in df_prices.columns:
 
@@ -675,7 +854,9 @@ if page == "🗄️ Database":
                     ["Όλα"]
                     +
                     sorted(
-                        df_prices["market"]
+                        df_prices[
+                            "market"
+                        ]
                         .dropna()
                         .astype(str)
                         .unique()
@@ -683,45 +864,63 @@ if page == "🗄️ Database":
                     )
                 )
 
+
             else:
 
-                market_options = ["Όλα"]
+                market_options = [
+                    "Όλα"
+                ]
 
 
-            selected_market = st.selectbox(
-                "🏪 Market",
-                market_options,
-                key="filter_market"
+            selected_market = (
+                st.selectbox(
+                    "🏪 Market",
+                    market_options
+                )
             )
 
 
             if (
                 selected_market != "Όλα"
                 and
-                "market" in df_prices.columns
+                "market"
+                in df_prices.columns
             ):
 
-                df_prices = df_prices[
-                    df_prices["market"]
-                    ==
-                    selected_market
-                ]
+                df_prices = (
+                    df_prices[
+                        df_prices[
+                            "market"
+                        ]
+                        ==
+                        selected_market
+                    ]
+                )
 
 
             # =================================================
-            # CITY FILTER
+            # CITY
             # =================================================
             if "city" in df_prices.columns:
 
                 valid_cities = (
-                    df_prices["city"]
+                    df_prices[
+                        "city"
+                    ]
                     .dropna()
                     .astype(str)
                 )
 
-                valid_cities = valid_cities[
-                    valid_cities.str.strip() != ""
-                ]
+
+                valid_cities = (
+                    valid_cities[
+                        valid_cities
+                        .str
+                        .strip()
+                        != ""
+                    ]
+                )
+
 
                 city_options = (
                     ["Όλες"]
@@ -733,38 +932,50 @@ if page == "🗄️ Database":
                     )
                 )
 
+
             else:
 
-                city_options = ["Όλες"]
+                city_options = [
+                    "Όλες"
+                ]
 
 
-            selected_city = st.selectbox(
-                "🏙️ Πόλη",
-                city_options,
-                key="filter_city"
+            selected_city = (
+                st.selectbox(
+                    "🏙️ Πόλη",
+                    city_options
+                )
             )
 
 
             if (
                 selected_city != "Όλες"
                 and
-                "city" in df_prices.columns
+                "city"
+                in df_prices.columns
             ):
 
-                df_prices = df_prices[
-                    df_prices["city"]
-                    ==
-                    selected_city
-                ]
+                df_prices = (
+                    df_prices[
+                        df_prices[
+                            "city"
+                        ]
+                        ==
+                        selected_city
+                    ]
+                )
 
 
             # =================================================
             # SEARCH
             # =================================================
-            search_text = st.text_input(
-                "🔎 Αναζήτηση",
-                placeholder="Προϊόν ή barcode",
-                key="database_search"
+            search_text = (
+                st.text_input(
+                    "🔎 Αναζήτηση",
+                    placeholder=(
+                        "Προϊόν ή barcode"
+                    )
+                )
             )
 
 
@@ -776,21 +987,29 @@ if page == "🗄️ Database":
                     .lower()
                 )
 
-                product_search = pd.Series(
-                    False,
-                    index=df_prices.index
+
+                product_search = (
+                    pd.Series(
+                        False,
+                        index=df_prices.index
+                    )
                 )
 
-                barcode_search = pd.Series(
-                    False,
-                    index=df_prices.index
+
+                barcode_search = (
+                    pd.Series(
+                        False,
+                        index=df_prices.index
+                    )
                 )
 
 
                 if "product" in df_prices.columns:
 
                     product_search = (
-                        df_prices["product"]
+                        df_prices[
+                            "product"
+                        ]
                         .fillna("")
                         .astype(str)
                         .str.lower()
@@ -804,7 +1023,9 @@ if page == "🗄️ Database":
                 if "barcode" in df_prices.columns:
 
                     barcode_search = (
-                        df_prices["barcode"]
+                        df_prices[
+                            "barcode"
+                        ]
                         .fillna("")
                         .astype(str)
                         .str.contains(
@@ -814,10 +1035,13 @@ if page == "🗄️ Database":
                     )
 
 
-                df_prices = df_prices[
-                    product_search |
-                    barcode_search
-                ]
+                df_prices = (
+                    df_prices[
+                        product_search
+                        |
+                        barcode_search
+                    ]
+                )
 
 
             st.caption(
@@ -826,88 +1050,143 @@ if page == "🗄️ Database":
 
 
             # =================================================
-            # EXPORT DATAFRAME
+            # EXPORT
             # =================================================
-            export_df = pd.DataFrame()
+            export_df = (
+                pd.DataFrame()
+            )
 
 
             if "created_at" in df_prices.columns:
 
-                export_df["Ημερομηνία"] = (
-                    df_prices["created_at"]
-                    .dt.strftime("%d/%m/%Y")
+                export_df[
+                    "Ημερομηνία"
+                ] = (
+                    df_prices[
+                        "created_at"
+                    ]
+                    .dt
+                    .strftime(
+                        "%d/%m/%Y"
+                    )
                 )
 
-                export_df["Ώρα"] = (
-                    df_prices["created_at"]
-                    .dt.strftime("%H:%M")
+
+                export_df[
+                    "Ώρα"
+                ] = (
+                    df_prices[
+                        "created_at"
+                    ]
+                    .dt
+                    .strftime(
+                        "%H:%M"
+                    )
                 )
+
 
             else:
 
-                export_df["Ημερομηνία"] = ""
-                export_df["Ώρα"] = ""
+                export_df[
+                    "Ημερομηνία"
+                ] = ""
+
+                export_df[
+                    "Ώρα"
+                ] = ""
 
 
             if "market" in df_prices.columns:
 
-                export_df["Market"] = (
-                    df_prices["market"]
+                export_df[
+                    "Market"
+                ] = (
+                    df_prices[
+                        "market"
+                    ]
                     .fillna("")
                 )
 
             else:
 
-                export_df["Market"] = ""
+                export_df[
+                    "Market"
+                ] = ""
 
 
             if "city" in df_prices.columns:
 
-                export_df["Πόλη"] = (
-                    df_prices["city"]
+                export_df[
+                    "Πόλη"
+                ] = (
+                    df_prices[
+                        "city"
+                    ]
                     .fillna("")
                 )
 
             else:
 
-                export_df["Πόλη"] = ""
+                export_df[
+                    "Πόλη"
+                ] = ""
 
 
             if "barcode" in df_prices.columns:
 
-                export_df["Barcode"] = (
-                    df_prices["barcode"]
+                export_df[
+                    "Barcode"
+                ] = (
+                    df_prices[
+                        "barcode"
+                    ]
                     .fillna("")
                     .astype(str)
                 )
 
             else:
 
-                export_df["Barcode"] = ""
+                export_df[
+                    "Barcode"
+                ] = ""
 
 
             if "product" in df_prices.columns:
 
-                export_df["Προϊόν"] = (
-                    df_prices["product"]
+                export_df[
+                    "Προϊόν"
+                ] = (
+                    df_prices[
+                        "product"
+                    ]
                     .fillna("")
                 )
 
             else:
 
-                export_df["Προϊόν"] = ""
+                export_df[
+                    "Προϊόν"
+                ] = ""
 
 
             if "price" in df_prices.columns:
 
-                export_df["Τιμή (€)"] = pd.to_numeric(
-                    df_prices["price"],
-                    errors="coerce"
+                export_df[
+                    "Τιμή (€)"
+                ] = (
+                    pd.to_numeric(
+                        df_prices[
+                            "price"
+                        ],
+                        errors="coerce"
+                    )
                 )
 
             else:
 
-                export_df["Τιμή (€)"] = ""
+                export_df[
+                    "Τιμή (€)"
+                ] = ""
 
 
             # =================================================
@@ -915,8 +1194,7 @@ if page == "🗄️ Database":
             # =================================================
             if st.button(
                 "📊 Προεπισκόπηση Excel",
-                use_container_width=True,
-                key="database_excel_preview"
+                use_container_width=True
             ):
 
                 st.session_state.preview_data = (
@@ -925,9 +1203,11 @@ if page == "🗄️ Database":
                     )
                 )
 
+
                 st.session_state.preview_return = (
                     "🗄️ Database"
                 )
+
 
                 st.session_state.preview_mode = True
 
@@ -935,63 +1215,107 @@ if page == "🗄️ Database":
 
 
             # =================================================
-            # MOBILE CARDS
+            # ΚΑΡΤΕΣ
             # =================================================
             for _, row in df_prices.iterrows():
 
-                product_value = row.get(
-                    "product",
-                    ""
-                )
-
-                market_value = row.get(
-                    "market",
-                    ""
-                )
-
-                city_value = row.get(
-                    "city",
-                    ""
-                )
-
-                barcode_value = row.get(
-                    "barcode",
-                    ""
-                )
-
-                price_value = row.get(
-                    "price",
-                    0
+                product_value = (
+                    row.get(
+                        "product",
+                        ""
+                    )
                 )
 
 
-                if pd.isna(product_value):
+                market_value = (
+                    row.get(
+                        "market",
+                        ""
+                    )
+                )
+
+
+                city_value = (
+                    row.get(
+                        "city",
+                        ""
+                    )
+                )
+
+
+                barcode_value = (
+                    row.get(
+                        "barcode",
+                        ""
+                    )
+                )
+
+
+                price_value = (
+                    row.get(
+                        "price",
+                        0
+                    )
+                )
+
+
+                if pd.isna(
+                    product_value
+                ):
                     product_value = ""
 
-                if pd.isna(market_value):
+
+                if pd.isna(
+                    market_value
+                ):
                     market_value = ""
 
-                if pd.isna(city_value):
+
+                if pd.isna(
+                    city_value
+                ):
                     city_value = ""
 
-                if pd.isna(barcode_value):
+
+                if pd.isna(
+                    barcode_value
+                ):
                     barcode_value = ""
 
 
-                product_value = html.escape(
-                    str(product_value)
+                product_value = (
+                    html.escape(
+                        str(
+                            product_value
+                        )
+                    )
                 )
 
-                market_value = html.escape(
-                    str(market_value)
+
+                market_value = (
+                    html.escape(
+                        str(
+                            market_value
+                        )
+                    )
                 )
 
-                city_value = html.escape(
-                    str(city_value)
+
+                city_value = (
+                    html.escape(
+                        str(
+                            city_value
+                        )
+                    )
                 )
 
-                barcode_value = html.escape(
-                    str(barcode_value)
+
+                barcode_value = (
+                    html.escape(
+                        str(
+                            barcode_value
+                        )
+                    )
                 )
 
 
@@ -1003,47 +1327,59 @@ if page == "🗄️ Database":
 
                 except Exception:
 
-                    price_text = str(
-                        price_value
+                    price_text = (
+                        str(
+                            price_value
+                        )
                     )
 
 
                 date_text = ""
 
-                created_at_value = row.get(
-                    "created_at"
+
+                created_at_value = (
+                    row.get(
+                        "created_at"
+                    )
                 )
 
 
                 if (
-                    created_at_value is not None
+                    created_at_value
+                    is not None
                     and
-                    pd.notna(created_at_value)
+                    pd.notna(
+                        created_at_value
+                    )
                 ):
 
                     try:
 
                         date_text = (
-                            created_at_value.strftime(
+                            created_at_value
+                            .strftime(
                                 "%d/%m/%Y • %H:%M"
                             )
                         )
 
                     except Exception:
 
-                        date_text = str(
-                            created_at_value
+                        date_text = (
+                            str(
+                                created_at_value
+                            )
                         )
 
 
                 city_html = ""
 
+
                 if city_value:
 
                     city_html = (
-                        f'<div class="price-city">'
+                        '<div class="price-city">'
                         f'🏙️ {city_value}'
-                        f'</div>'
+                        '</div>'
                     )
 
 
@@ -1089,7 +1425,7 @@ barcode_scanner = components.declare_component(
 
 
 # =========================================================
-# SESSION STATE SCANNER
+# SCANNER SESSION
 # =========================================================
 if "records" not in st.session_state:
     st.session_state.records = []
@@ -1117,7 +1453,7 @@ if "manual_search_message" not in st.session_state:
 
 
 # =========================================================
-# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
+# SUCCESS
 # =========================================================
 if st.session_state.saved_message:
 
@@ -1147,12 +1483,17 @@ st.markdown(
     <div style="
         width:100%;
         text-align:right;
+
         font-size:11px;
         font-weight:400;
+
         color:#8a8f98;
+
         margin-top:-4px;
         margin-bottom:6px;
+
         padding-right:4px;
+
         line-height:1.2;
         letter-spacing:0.1px;
     ">
@@ -1163,11 +1504,12 @@ st.markdown(
 )
 
 
+# Το μήνυμα έχει σταλεί στον scanner
 st.session_state.scanner_message = ""
 
 
 # =========================================================
-# ΑΠΟΤΕΛΕΣΜΑ SCANNER
+# BARCODE RESULT
 # =========================================================
 if barcode_result:
 
@@ -1183,9 +1525,13 @@ if barcode_result:
             )
         ).strip()
 
-        scan_id = barcode_result.get(
-            "scan_id"
+
+        scan_id = (
+            barcode_result.get(
+                "scan_id"
+            )
         )
+
 
     else:
 
@@ -1196,23 +1542,35 @@ if barcode_result:
         scan_id = barcode
 
 
-    if scan_id != st.session_state.last_scan_id:
+    if (
+        scan_id
+        !=
+        st.session_state.last_scan_id
+    ):
 
-        st.session_state.last_scan_id = scan_id
+        st.session_state.last_scan_id = (
+            scan_id
+        )
 
 
         if barcode in PRODUCTS:
 
-            st.session_state.current_barcode = barcode
+            st.session_state.current_barcode = (
+                barcode
+            )
 
 
         else:
 
-            st.session_state.current_barcode = None
+            st.session_state.current_barcode = (
+                None
+            )
+
 
             st.session_state.scanner_message = (
                 "⛔ Ο κωδικός δεν υπάρχει"
             )
+
 
             st.session_state.reset_token += 1
 
@@ -1227,9 +1585,12 @@ st.markdown(
     <div style="
         font-size:22px;
         font-weight:700;
+
         margin-top:8px;
         margin-bottom:6px;
+
         line-height:1.2;
+
         color:#111827;
     ">
         🔎 Χειροκίνητη αναζήτηση
@@ -1248,11 +1609,13 @@ manual_barcode = st.text_input(
 
 if st.button(
     "🔎 Αναζήτηση προϊόντος",
-    use_container_width=True,
-    key="manual_search_button"
+    use_container_width=True
 ):
 
-    code = manual_barcode.strip()
+    code = (
+        manual_barcode
+        .strip()
+    )
 
 
     if not code:
@@ -1264,64 +1627,89 @@ if st.button(
 
     elif code in PRODUCTS:
 
-        st.session_state.current_barcode = code
+        st.session_state.current_barcode = (
+            code
+        )
+
 
         st.session_state.manual_search_message = (
             "✅ Το προϊόν βρέθηκε."
         )
 
+
         st.rerun()
 
 
     else:
 
-        st.session_state.current_barcode = None
+        st.session_state.current_barcode = (
+            None
+        )
+
 
         st.session_state.manual_search_message = (
             "⛔ Ο κωδικός δεν υπάρχει στη βάση προϊόντων."
         )
 
+
         st.rerun()
 
 
 # =========================================================
-# ΜΗΝΥΜΑ ΧΕΙΡΟΚΙΝΗΤΗΣ ΑΝΑΖΗΤΗΣΗΣ
+# MANUAL MESSAGE
 # =========================================================
 if st.session_state.manual_search_message:
 
     message = (
-        st.session_state.manual_search_message
+        st.session_state
+        .manual_search_message
     )
 
 
-    if message.startswith("✅"):
+    if message.startswith(
+        "✅"
+    ):
 
-        st.success(message)
+        st.success(
+            message
+        )
 
 
-    elif message.startswith("⛔"):
+    elif message.startswith(
+        "⛔"
+    ):
 
-        st.warning(message)
+        st.warning(
+            message
+        )
 
 
     else:
 
-        st.info(message)
+        st.info(
+            message
+        )
 
 
     st.session_state.manual_search_message = ""
 
 
 # =========================================================
-# ΠΡΟΪΟΝ / MARKET / ΠΟΛΗ / ΤΙΜΗ
+# ΠΡΟΪΟΝ
 # =========================================================
 if st.session_state.current_barcode:
 
-    barcode = st.session_state.current_barcode
+    barcode = (
+        st.session_state
+        .current_barcode
+    )
 
-    product = PRODUCTS[
-        barcode
-    ]
+
+    product = (
+        PRODUCTS[
+            barcode
+        ]
+    )
 
 
     st.markdown(
@@ -1354,7 +1742,7 @@ if st.session_state.current_barcode:
 
 
     # =====================================================
-    # ΠΟΛΗ
+    # CITY
     # =====================================================
     city = st.selectbox(
         "🏙️ Πόλη *",
@@ -1368,7 +1756,7 @@ if st.session_state.current_barcode:
 
 
     # =====================================================
-    # ΤΙΜΗ
+    # PRICE
     # =====================================================
     price = st.number_input(
         "💶 Τιμή (€)",
@@ -1383,13 +1771,12 @@ if st.session_state.current_barcode:
 
 
     # =====================================================
-    # ΑΠΟΘΗΚΕΥΣΗ
+    # SAVE
     # =====================================================
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
-        use_container_width=True,
-        key="save_price_button"
+        use_container_width=True
     ):
 
 
@@ -1457,15 +1844,24 @@ if st.session_state.current_barcode:
                 )
 
 
-                st.session_state.current_barcode = None
+                st.session_state.current_barcode = (
+                    None
+                )
+
 
                 st.session_state.entry_counter += 1
 
+
                 st.session_state.scanner_message = ""
+
 
                 st.session_state.reset_token += 1
 
-                st.session_state.saved_message = True
+
+                st.session_state.saved_message = (
+                    True
+                )
+
 
                 st.rerun()
 
@@ -1482,7 +1878,7 @@ if st.session_state.current_barcode:
 
 
 # =========================================================
-# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
+# ΤΡΕΧΟΥΣΕΣ ΚΑΤΑΧΩΡΗΣΕΙΣ
 # =========================================================
 if st.session_state.records:
 
@@ -1515,10 +1911,15 @@ if st.session_state.records:
             )
         )
 
+
         st.session_state.preview_return = (
             "📷 Scanner"
         )
 
-        st.session_state.preview_mode = True
+
+        st.session_state.preview_mode = (
+            True
+        )
+
 
         st.rerun()

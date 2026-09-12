@@ -4,7 +4,6 @@ import streamlit.components.v1 as components
 
 from io import BytesIO
 from datetime import datetime
-import base64
 import html
 
 from supabase import create_client
@@ -174,37 +173,6 @@ div[data-testid="stRadio"] label {
     font-size: 13px;
 
     color: #6b7280;
-}
-
-
-/* -------------------------------------------------------
-   EXCEL BUTTON
-------------------------------------------------------- */
-
-.excel-button {
-    display: block;
-
-    width: 100%;
-
-    text-align: center;
-
-    padding: 12px 16px;
-
-    margin-top: 8px;
-
-    background: #ffffff;
-
-    color: #111827 !important;
-
-    border: 1px solid #d1d5db;
-
-    border-radius: 8px;
-
-    font-size: 16px;
-
-    font-weight: 600;
-
-    text-decoration: none !important;
 }
 
 </style>
@@ -429,7 +397,7 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # EXCEL ΑΠΟ ΤΑ ΦΙΛΤΡΑΡΙΣΜΕΝΑ ΑΠΟΤΕΛΕΣΜΑΤΑ
+            # EXCEL
             # -------------------------------------------------
             export_df = pd.DataFrame()
 
@@ -508,9 +476,6 @@ if page == "📋 Τιμές":
                 export_df["Τιμή (€)"] = ""
 
 
-            # -------------------------------------------------
-            # ΔΗΜΙΟΥΡΓΙΑ EXCEL
-            # -------------------------------------------------
             excel_output = BytesIO()
 
 
@@ -526,12 +491,9 @@ if page == "📋 Τιμές":
                 )
 
 
-                worksheet = (
-                    writer.sheets["Τιμές"]
-                )
+                worksheet = writer.sheets["Τιμές"]
 
 
-                # Πλάτη στηλών
                 worksheet.column_dimensions["A"].width = 14
                 worksheet.column_dimensions["B"].width = 10
                 worksheet.column_dimensions["C"].width = 22
@@ -540,17 +502,13 @@ if page == "📋 Τιμές":
                 worksheet.column_dimensions["F"].width = 12
 
 
-                # Freeze πρώτη γραμμή
                 worksheet.freeze_panes = "A2"
 
-
-                # Auto filter
                 worksheet.auto_filter.ref = (
                     worksheet.dimensions
                 )
 
 
-                # Μορφή τιμής
                 for cell in worksheet["F"][1:]:
 
                     cell.number_format = (
@@ -562,7 +520,8 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # DOWNLOAD BUTTON
+            # DOWNLOAD EXCEL
+            # ΜΕΝΕΙΣ ΣΤΟ APP
             # -------------------------------------------------
             st.download_button(
                 label="📥 Εξαγωγή σε Excel",
@@ -1064,6 +1023,9 @@ if st.session_state.records:
     )
 
 
+    # -----------------------------------------------------
+    # EXCEL ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
+    # -----------------------------------------------------
     output = BytesIO()
 
 
@@ -1078,42 +1040,44 @@ if st.session_state.records:
             sheet_name="Τιμές"
         )
 
+        worksheet = writer.sheets["Τιμές"]
 
-    excel_data = (
-        output.getvalue()
-    )
+        worksheet.column_dimensions["A"].width = 14
+        worksheet.column_dimensions["B"].width = 10
+        worksheet.column_dimensions["C"].width = 22
+        worksheet.column_dimensions["D"].width = 18
+        worksheet.column_dimensions["E"].width = 45
+        worksheet.column_dimensions["F"].width = 12
 
+        worksheet.freeze_panes = "A2"
 
-    excel_base64 = (
-        base64.b64encode(
-            excel_data
-        ).decode(
-            "utf-8"
+        worksheet.auto_filter.ref = (
+            worksheet.dimensions
         )
-    )
 
 
-    excel_href = (
-        "data:"
-        "application/vnd.openxmlformats-officedocument."
-        "spreadsheetml.sheet;base64,"
-        +
-        excel_base64
-    )
+    output.seek(0)
 
 
-    excel_button = (
-        f'<a class="excel-button" '
-        f'href="{excel_href}" '
-        f'download="local_items_prices.xlsx" '
-        f'target="_blank" '
-        f'rel="noopener noreferrer">'
-        f'📥 Άνοιγμα / Κατέβασμα Excel'
-        f'</a>'
-    )
-
-
-    st.markdown(
-        excel_button,
-        unsafe_allow_html=True
+    # -----------------------------------------------------
+    # DOWNLOAD ΧΩΡΙΣ ΝΑ ΦΕΥΓΕΙ ΑΠΟ ΤΟ APP
+    # -----------------------------------------------------
+    st.download_button(
+        label="📥 Κατέβασμα Excel",
+        data=output.getvalue(),
+        file_name=(
+            "local_items_prices_"
+            +
+            datetime.now().strftime(
+                "%d-%m-%Y_%H-%M"
+            )
+            +
+            ".xlsx"
+        ),
+        mime=(
+            "application/"
+            "vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        use_container_width=True
     )

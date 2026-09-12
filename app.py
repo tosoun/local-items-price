@@ -220,6 +220,9 @@ if "main_page" not in st.session_state:
 if "prices_unlocked" not in st.session_state:
     st.session_state.prices_unlocked = False
 
+if "confirm_delete_all" not in st.session_state:
+    st.session_state.confirm_delete_all = False
+
 
 # =========================================================
 # ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
@@ -319,7 +322,6 @@ if st.session_state.preview_mode:
         components.html(
             f"""
             <html>
-
             <body style="
                 margin:0;
                 padding:0;
@@ -391,7 +393,6 @@ if st.session_state.preview_mode:
                 </script>
 
             </body>
-
             </html>
             """,
             height=65
@@ -416,11 +417,12 @@ page = st.radio(
 
 
 # =========================================================
-# ΑΝ ΠΑΜΕ ΣΤΟ SCANNER
-# ΞΑΝΑΚΛΕΙΔΩΝΟΥΜΕ ΤΟ TAB ΤΙΜΕΣ
+# SCANNER = ΠΑΝΤΑ ΧΩΡΙΣ ΚΩΔΙΚΟ
+# ΚΑΙ ΞΑΝΑΚΛΕΙΔΩΝΕΙ ΤΙΣ ΤΙΜΕΣ
 # =========================================================
 if page == "📷 Scanner":
     st.session_state.prices_unlocked = False
+    st.session_state.confirm_delete_all = False
 
 
 # =========================================================
@@ -429,7 +431,7 @@ if page == "📷 Scanner":
 if page == "📋 Τιμές":
 
     # -----------------------------------------------------
-    # ΚΩΔΙΚΟΣ ΜΟΝΟ ΓΙΑ ΤΟ TAB ΤΙΜΕΣ
+    # ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ ΜΟΝΟ ΓΙΑ ΤΙΜΕΣ
     # -----------------------------------------------------
     if not st.session_state.prices_unlocked:
 
@@ -471,11 +473,82 @@ if page == "📋 Τιμές":
         "## 📋 Καταχωρημένες Τιμές"
     )
 
+    # -----------------------------------------------------
+    # ΑΝΑΝΕΩΣΗ
+    # -----------------------------------------------------
     if st.button(
         "🔄 Ανανέωση",
         use_container_width=True
     ):
         st.rerun()
+
+
+    # -----------------------------------------------------
+    # DEL - ΔΙΑΓΡΑΦΗ ΟΛΗΣ ΤΗΣ ΛΙΣΤΑΣ
+    # -----------------------------------------------------
+    if st.button(
+        "🗑️ DEL – Διαγραφή λίστας",
+        use_container_width=True,
+        key="delete_all_button"
+    ):
+        st.session_state.confirm_delete_all = True
+
+
+    if st.session_state.confirm_delete_all:
+
+        st.warning(
+            "⚠️ Θα διαγραφούν ΟΛΕΣ οι καταχωρήσεις από τη λίστα."
+        )
+
+        col_cancel, col_delete = st.columns(2)
+
+        with col_cancel:
+
+            if st.button(
+                "❌ Ακύρωση",
+                use_container_width=True,
+                key="cancel_delete_all"
+            ):
+
+                st.session_state.confirm_delete_all = False
+                st.rerun()
+
+        with col_delete:
+
+            if st.button(
+                "🗑️ Οριστική διαγραφή",
+                type="primary",
+                use_container_width=True,
+                key="confirm_delete_all_button"
+            ):
+
+                try:
+
+                    supabase.table(
+                        "price_records"
+                    ).delete().gte(
+                        "id",
+                        0
+                    ).execute()
+
+                    st.session_state.confirm_delete_all = False
+
+                    st.success(
+                        "✅ Η λίστα διαγράφηκε."
+                    )
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(
+                        "❌ Δεν έγινε η διαγραφή."
+                    )
+
+                    st.caption(
+                        str(e)
+                    )
+
 
     try:
 
@@ -503,7 +576,7 @@ if page == "📋 Τιμές":
             df_prices = pd.DataFrame(rows)
 
             # -------------------------------------------------
-            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ
+            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ ΕΛΛΑΔΑΣ
             # -------------------------------------------------
             if "created_at" in df_prices.columns:
 
@@ -519,7 +592,7 @@ if page == "📋 Τιμές":
                 )
 
             # -------------------------------------------------
-            # MARKET FILTER
+            # ΦΙΛΤΡΟ MARKET
             # -------------------------------------------------
             if "market" in df_prices.columns:
 
@@ -558,7 +631,7 @@ if page == "📋 Τιμές":
                 ]
 
             # -------------------------------------------------
-            # CITY FILTER
+            # ΦΙΛΤΡΟ ΠΟΛΗΣ
             # -------------------------------------------------
             if "city" in df_prices.columns:
 
@@ -605,7 +678,7 @@ if page == "📋 Τιμές":
                 ]
 
             # -------------------------------------------------
-            # SEARCH
+            # ΑΝΑΖΗΤΗΣΗ
             # -------------------------------------------------
             search_text = st.text_input(
                 "🔎 Αναζήτηση",
@@ -665,7 +738,7 @@ if page == "📋 Τιμές":
             )
 
             # -------------------------------------------------
-            # EXPORT DATAFRAME
+            # DATAFRAME ΓΙΑ EXCEL
             # -------------------------------------------------
             export_df = pd.DataFrame()
 
@@ -743,7 +816,7 @@ if page == "📋 Τιμές":
                 export_df["Τιμή (€)"] = ""
 
             # -------------------------------------------------
-            # PREVIEW EXCEL
+            # ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
             # -------------------------------------------------
             if st.button(
                 "📊 Προεπισκόπηση Excel",
@@ -765,7 +838,7 @@ if page == "📋 Τιμές":
                 st.rerun()
 
             # -------------------------------------------------
-            # CARDS
+            # ΚΑΡΤΕΣ ΤΙΜΩΝ
             # -------------------------------------------------
             for _, row in df_prices.iterrows():
 
@@ -937,7 +1010,7 @@ if "manual_search_message" not in st.session_state:
 
 
 # =========================================================
-# SAVE SUCCESS
+# ΜΗΝΥΜΑ ΕΠΙΤΥΧΙΑΣ
 # =========================================================
 if st.session_state.saved_message:
 
@@ -962,7 +1035,7 @@ st.session_state.scanner_message = ""
 
 
 # =========================================================
-# SCANNER RESULT
+# ΑΠΟΤΕΛΕΣΜΑ SCANNER
 # =========================================================
 if barcode_result:
 
@@ -1017,7 +1090,7 @@ if barcode_result:
 
 
 # =========================================================
-# MANUAL SEARCH
+# ΧΕΙΡΟΚΙΝΗΤΗ ΑΝΑΖΗΤΗΣΗ
 # =========================================================
 st.markdown(
     "### 🔎 Χειροκίνητη αναζήτηση"
@@ -1064,7 +1137,7 @@ if st.button(
 
 
 # =========================================================
-# MANUAL SEARCH MESSAGE
+# ΜΗΝΥΜΑ ΧΕΙΡΟΚΙΝΗΤΗΣ ΑΝΑΖΗΤΗΣΗΣ
 # =========================================================
 if st.session_state.manual_search_message:
 
@@ -1088,7 +1161,7 @@ if st.session_state.manual_search_message:
 
 
 # =========================================================
-# PRODUCT / MARKET / CITY / PRICE
+# ΠΡΟΪΟΝ / MARKET / ΠΟΛΗ / ΤΙΜΗ
 # =========================================================
 if st.session_state.current_barcode:
 
@@ -1228,7 +1301,7 @@ if st.session_state.current_barcode:
 
 
 # =========================================================
-# SESSION RECORDS
+# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
 # =========================================================
 if st.session_state.records:
 

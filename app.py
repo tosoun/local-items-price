@@ -499,7 +499,19 @@ if page == "🗄️ Database":
     if not st.session_state.prices_unlocked:
 
         st.markdown(
-            "## 🔒 Πρόσβαση στη Database"
+            """
+            <div style="
+                font-size:22px;
+                font-weight:700;
+                margin-top:8px;
+                margin-bottom:6px;
+                line-height:1.2;
+                color:#111827;
+            ">
+                🔒 Πρόσβαση στη Database
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
         access_code = st.text_input(

@@ -93,14 +93,13 @@ footer {
 
 
 /* =======================================================
-   TOP MENU ΧΩΡΙΣ ΠΛΑΙΣΙΟ
+   TOP MENU ΧΩΡΙΣ STICKY
 ======================================================= */
 
 div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 999999 !important;
+    position: relative !important;
+    top: auto !important;
+    z-index: auto !important;
 
     background: transparent !important;
 
@@ -482,9 +481,6 @@ if page == "📷 Scanner":
 # =========================================================
 if page == "🗄️ Database":
 
-    # =====================================================
-    # ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ
-    # =====================================================
     if not st.session_state.prices_unlocked:
 
         st.markdown(
@@ -518,17 +514,11 @@ if page == "🗄️ Database":
         st.stop()
 
 
-    # =====================================================
-    # ΚΑΤΑΧΩΡΗΜΕΝΕΣ ΤΙΜΕΣ
-    # =====================================================
     st.markdown(
         "## 📋 Καταχωρημένες Τιμές"
     )
 
 
-    # =====================================================
-    # ΜΗΝΥΜΑ ΔΙΑΓΡΑΦΗΣ
-    # =====================================================
     if st.session_state.delete_success:
 
         st.success(
@@ -538,9 +528,6 @@ if page == "🗄️ Database":
         st.session_state.delete_success = False
 
 
-    # =====================================================
-    # ΑΝΑΝΕΩΣΗ
-    # =====================================================
     if st.button(
         "🔄 Ανανέωση",
         use_container_width=True
@@ -548,9 +535,6 @@ if page == "🗄️ Database":
         st.rerun()
 
 
-    # =====================================================
-    # DEL
-    # =====================================================
     if st.button(
         "🗑️ DEL – Διαγραφή λίστας",
         use_container_width=True,
@@ -560,9 +544,6 @@ if page == "🗄️ Database":
         st.session_state.confirm_delete_all = True
 
 
-    # =====================================================
-    # ΕΠΙΒΕΒΑΙΩΣΗ DEL
-    # =====================================================
     if st.session_state.confirm_delete_all:
 
         st.warning(
@@ -649,9 +630,6 @@ if page == "🗄️ Database":
                     )
 
 
-    # =====================================================
-    # ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ
-    # =====================================================
     try:
 
         response = (
@@ -680,9 +658,6 @@ if page == "🗄️ Database":
             df_prices = pd.DataFrame(rows)
 
 
-            # =================================================
-            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ
-            # =================================================
             if "created_at" in df_prices.columns:
 
                 df_prices["created_at"] = pd.to_datetime(
@@ -697,9 +672,6 @@ if page == "🗄️ Database":
                 )
 
 
-            # =================================================
-            # MARKET FILTER
-            # =================================================
             if "market" in df_prices.columns:
 
                 market_options = (
@@ -739,9 +711,6 @@ if page == "🗄️ Database":
                 ]
 
 
-            # =================================================
-            # CITY FILTER
-            # =================================================
             if "city" in df_prices.columns:
 
                 valid_cities = (
@@ -789,9 +758,6 @@ if page == "🗄️ Database":
                 ]
 
 
-            # =================================================
-            # SEARCH
-            # =================================================
             search_text = st.text_input(
                 "🔎 Αναζήτηση",
                 placeholder="Προϊόν ή barcode"
@@ -855,9 +821,6 @@ if page == "🗄️ Database":
             )
 
 
-            # =================================================
-            # EXPORT DATAFRAME
-            # =================================================
             export_df = pd.DataFrame()
 
 
@@ -940,9 +903,6 @@ if page == "🗄️ Database":
                 export_df["Τιμή (€)"] = ""
 
 
-            # =================================================
-            # EXCEL PREVIEW
-            # =================================================
             if st.button(
                 "📊 Προεπισκόπηση Excel",
                 use_container_width=True
@@ -963,9 +923,6 @@ if page == "🗄️ Database":
                 st.rerun()
 
 
-            # =================================================
-            # ΚΑΡΤΕΣ
-            # =================================================
             for _, row in df_prices.iterrows():
 
                 product_value = row.get(
@@ -1374,9 +1331,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # =====================================================
-    # MARKET
-    # =====================================================
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
@@ -1388,9 +1342,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # =====================================================
-    # ΠΟΛΗ
-    # =====================================================
     city = st.selectbox(
         "🏙️ Πόλη *",
         CITIES,
@@ -1402,9 +1353,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # =====================================================
-    # ΤΙΜΗ
-    # =====================================================
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -1417,9 +1365,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # =====================================================
-    # ΑΠΟΘΗΚΕΥΣΗ
-    # =====================================================
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",

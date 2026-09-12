@@ -4,7 +4,6 @@ import streamlit.components.v1 as components
 
 from io import BytesIO
 from datetime import datetime
-import base64
 import html
 
 from supabase import create_client
@@ -174,40 +173,6 @@ div[data-testid="stRadio"] label {
     font-size: 13px;
 
     color: #6b7280;
-}
-
-
-/* -------------------------------------------------------
-   EXCEL BUTTON
-------------------------------------------------------- */
-
-.excel-button {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-
-    text-align: center;
-
-    padding: 12px 16px;
-    margin-top: 8px;
-    margin-bottom: 8px;
-
-    background: #ffffff;
-
-    color: #111827 !important;
-
-    border: 1px solid #d1d5db;
-
-    border-radius: 8px;
-
-    font-size: 16px;
-    font-weight: 600;
-
-    text-decoration: none !important;
-}
-
-.excel-button:hover {
-    background: #f3f4f6;
 }
 
 </style>
@@ -436,7 +401,7 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # EXCEL DATAFRAME
+            # DATAFRAME ΓΙΑ EXCEL
             # -------------------------------------------------
             export_df = pd.DataFrame()
 
@@ -564,55 +529,26 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # ΑΝΟΙΓΜΑ EXCEL ΣΕ ΞΕΧΩΡΙΣΤΗ ΣΕΛΙΔΑ
+            # DOWNLOAD EXCEL
             # -------------------------------------------------
-            excel_data = (
-                excel_output.getvalue()
-            )
-
-
-            excel_base64 = (
-                base64.b64encode(
-                    excel_data
-                ).decode(
-                    "utf-8"
-                )
-            )
-
-
-            excel_file_name = (
-                "times_"
-                +
-                datetime.now().strftime(
-                    "%d-%m-%Y_%H-%M"
-                )
-                +
-                ".xlsx"
-            )
-
-
-            excel_href = (
-                "data:"
-                "application/vnd.openxmlformats-officedocument."
-                "spreadsheetml.sheet;base64,"
-                +
-                excel_base64
-            )
-
-
-            st.markdown(
-                f'''
-<a
-    class="excel-button"
-    href="{excel_href}"
-    download="{excel_file_name}"
-    target="_blank"
-    rel="noopener noreferrer"
->
-    📥 Άνοιγμα / Κατέβασμα Excel
-</a>
-''',
-                unsafe_allow_html=True
+            st.download_button(
+                label="📥 Εξαγωγή σε Excel",
+                data=excel_output.getvalue(),
+                file_name=(
+                    "times_"
+                    +
+                    datetime.now().strftime(
+                        "%d-%m-%Y_%H-%M"
+                    )
+                    +
+                    ".xlsx"
+                ),
+                mime=(
+                    "application/"
+                    "vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
+                use_container_width=True
             )
 
 
@@ -1119,7 +1055,9 @@ if st.session_state.records:
         )
 
 
-        worksheet = writer.sheets["Τιμές"]
+        worksheet = (
+            writer.sheets["Τιμές"]
+        )
 
 
         worksheet.column_dimensions["A"].width = 14
@@ -1142,53 +1080,24 @@ if st.session_state.records:
 
 
     # -----------------------------------------------------
-    # EXCEL ΣΕ ΞΕΧΩΡΙΣΤΗ ΣΕΛΙΔΑ
+    # DOWNLOAD EXCEL
     # -----------------------------------------------------
-    local_excel_data = (
-        output.getvalue()
-    )
-
-
-    local_excel_base64 = (
-        base64.b64encode(
-            local_excel_data
-        ).decode(
-            "utf-8"
-        )
-    )
-
-
-    local_excel_file_name = (
-        "local_items_prices_"
-        +
-        datetime.now().strftime(
-            "%d-%m-%Y_%H-%M"
-        )
-        +
-        ".xlsx"
-    )
-
-
-    local_excel_href = (
-        "data:"
-        "application/vnd.openxmlformats-officedocument."
-        "spreadsheetml.sheet;base64,"
-        +
-        local_excel_base64
-    )
-
-
-    st.markdown(
-        f'''
-<a
-    class="excel-button"
-    href="{local_excel_href}"
-    download="{local_excel_file_name}"
-    target="_blank"
-    rel="noopener noreferrer"
->
-    📥 Άνοιγμα / Κατέβασμα Excel
-</a>
-''',
-        unsafe_allow_html=True
+    st.download_button(
+        label="📥 Κατέβασμα Excel",
+        data=output.getvalue(),
+        file_name=(
+            "local_items_prices_"
+            +
+            datetime.now().strftime(
+                "%d-%m-%Y_%H-%M"
+            )
+            +
+            ".xlsx"
+        ),
+        mime=(
+            "application/"
+            "vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        use_container_width=True
     )

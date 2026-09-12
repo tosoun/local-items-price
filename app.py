@@ -5,6 +5,7 @@ import streamlit.components.v1 as components
 from io import BytesIO
 from datetime import datetime
 import base64
+import html
 
 from supabase import create_client
 
@@ -40,7 +41,6 @@ st.markdown(
     """
 <style>
 
-/* Κύριο περιεχόμενο */
 .block-container {
     padding-top: 0.2rem !important;
     padding-left: 1rem !important;
@@ -48,24 +48,14 @@ st.markdown(
     padding-bottom: 1rem !important;
 }
 
-
-/* Μικρότερα κενά */
 div[data-testid="stVerticalBlock"] {
     gap: 0.5rem !important;
 }
-
 
 div[data-testid="stAlert"] {
     margin-top: 0.2rem !important;
     margin-bottom: 0.2rem !important;
 }
-
-
-hr {
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-}
-
 
 iframe {
     display: block !important;
@@ -74,13 +64,12 @@ iframe {
 
 
 /* -------------------------------------------------------
-   ΜΟΝΙΜΟ MENU - Scanner / Τιμές
+   ΜΟΝΙΜΟ MENU
 ------------------------------------------------------- */
 
-/* Κολλάμε ΟΛΟ το Streamlit container που έχει το radio */
 div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
-    position: sticky !important;
     position: -webkit-sticky !important;
+    position: sticky !important;
 
     top: 0 !important;
 
@@ -96,23 +85,18 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
 
     border-bottom: 1px solid #e5e7eb !important;
 
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
 }
 
 
-/* Το ίδιο το radio δεν είναι sticky */
 div[data-testid="stRadio"] {
     position: relative !important;
-    top: auto !important;
-
-    background: #ffffff !important;
-
+    background: white !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
 
-/* Scanner / Τιμές στην ίδια γραμμή */
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
@@ -121,37 +105,106 @@ div[data-testid="stRadio"] > div {
 }
 
 
-/* Κείμενο menu */
 div[data-testid="stRadio"] label {
     font-size: 17px !important;
     font-weight: 600 !important;
 }
 
 
-/* Excel button */
-.excel-button {
-    display: block;
-    width: 100%;
-    text-align: center;
+/* -------------------------------------------------------
+   ΚΑΡΤΕΣ ΤΙΜΩΝ
+------------------------------------------------------- */
 
-    padding: 12px 16px;
-    margin-top: 8px;
+.price-card {
+    border: 1px solid #d8dde5;
+    border-radius: 14px;
+
+    padding: 14px 15px;
+
+    margin-top: 4px;
+    margin-bottom: 10px;
 
     background: #ffffff;
-    color: #111827 !important;
 
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-
-    font-size: 16px;
-    font-weight: 600;
-
-    text-decoration: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 
-.excel-button:hover {
-    background: #f3f4f6;
+.price-product {
+    font-size: 17px;
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    color: #111827;
+}
+
+
+.price-value {
+    font-size: 27px;
+    font-weight: 800;
+
+    margin-top: 7px;
+
+    color: #111827;
+}
+
+
+.price-market {
+    margin-top: 7px;
+
+    font-size: 15px;
+
+    color: #374151;
+}
+
+
+.price-barcode {
+    margin-top: 5px;
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+
+.price-date {
+    margin-top: 2px;
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+
+/* -------------------------------------------------------
+   EXCEL BUTTON
+------------------------------------------------------- */
+
+.excel-button {
+    display: block;
+
+    width: 100%;
+
+    text-align: center;
+
+    padding: 12px 16px;
+
+    margin-top: 8px;
+
+    background: #ffffff;
+
+    color: #111827 !important;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    text-decoration: none !important;
 }
 
 </style>
@@ -182,7 +235,7 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# ΕΠΙΛΟΓΗ ΣΕΛΙΔΑΣ
+# MENU
 # ---------------------------------------------------------
 page = st.radio(
     "",
@@ -200,9 +253,7 @@ page = st.radio(
 # =========================================================
 if page == "📋 Τιμές":
 
-    st.markdown(
-        "## 📋 Καταχωρημένες Τιμές"
-    )
+    st.markdown("## 📋 Καταχωρημένες Τιμές")
 
 
     if st.button(
@@ -238,13 +289,11 @@ if page == "📋 Τιμές":
 
         else:
 
-            df_prices = pd.DataFrame(
-                rows
-            )
+            df_prices = pd.DataFrame(rows)
 
 
             # -------------------------------------------------
-            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ ΕΛΛΑΔΑΣ
+            # ΗΜΕΡΟΜΗΝΙΑ
             # -------------------------------------------------
             if "created_at" in df_prices.columns:
 
@@ -263,7 +312,7 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # ΦΙΛΤΡΟ MARKET
+            # MARKET FILTER
             # -------------------------------------------------
             if "market" in df_prices.columns:
 
@@ -276,11 +325,8 @@ if page == "📋 Τιμές":
                 )
 
                 market_options = (
-                    ["Όλα"]
-                    +
-                    sorted(
-                        markets_found
-                    )
+                    ["Όλα"] +
+                    sorted(markets_found)
                 )
 
             else:
@@ -366,22 +412,18 @@ if page == "📋 Τιμές":
 
 
                 df_prices = df_prices[
-                    product_search
-                    |
+                    product_search |
                     barcode_search
                 ]
 
 
-            # -------------------------------------------------
-            # ΠΛΗΘΟΣ
-            # -------------------------------------------------
             st.caption(
                 f"Σύνολο: {len(df_prices)} καταχωρήσεις"
             )
 
 
             # -------------------------------------------------
-            # ΚΑΡΤΕΣ ΚΙΝΗΤΟΥ
+            # ΚΑΡΤΕΣ
             # -------------------------------------------------
             for _, row in df_prices.iterrows():
 
@@ -416,9 +458,19 @@ if page == "📋 Τιμές":
                     barcode_value = ""
 
 
-                # ---------------------------------------------
-                # ΤΙΜΗ
-                # ---------------------------------------------
+                product_value = html.escape(
+                    str(product_value)
+                )
+
+                market_value = html.escape(
+                    str(market_value)
+                )
+
+                barcode_value = html.escape(
+                    str(barcode_value)
+                )
+
+
                 try:
 
                     price_text = (
@@ -432,9 +484,6 @@ if page == "📋 Τιμές":
                     )
 
 
-                # ---------------------------------------------
-                # ΗΜΕΡΟΜΗΝΙΑ
-                # ---------------------------------------------
                 date_text = ""
 
 
@@ -464,63 +513,21 @@ if page == "📋 Τιμές":
                         )
 
 
-                # ---------------------------------------------
-                # ΚΑΡΤΑ
-                # ---------------------------------------------
+                # ΠΡΟΣΟΧΗ:
+                # Χωρίς κενά στην αρχή των γραμμών HTML
+                card_html = (
+                    '<div class="price-card">'
+                    f'<div class="price-product">{product_value}</div>'
+                    f'<div class="price-value">{price_text}</div>'
+                    f'<div class="price-market">🏪 {market_value}</div>'
+                    f'<div class="price-barcode">Barcode: {barcode_value}</div>'
+                    f'<div class="price-date">🕒 {date_text}</div>'
+                    '</div>'
+                )
+
+
                 st.markdown(
-                    f"""
-<div style="
-    border:1px solid #d1d5db;
-    border-radius:14px;
-    padding:14px;
-    margin-bottom:10px;
-    background:#ffffff;
-">
-
-    <div style="
-        font-size:17px;
-        font-weight:700;
-        color:#111827;
-        line-height:1.25;
-    ">
-        {product_value}
-    </div>
-
-    <div style="
-        font-size:26px;
-        font-weight:800;
-        margin-top:6px;
-        color:#111827;
-    ">
-        {price_text}
-    </div>
-
-    <div style="
-        margin-top:5px;
-        font-size:14px;
-        color:#374151;
-    ">
-        🏪 {market_value}
-    </div>
-
-    <div style="
-        font-size:12px;
-        color:#6b7280;
-        margin-top:5px;
-    ">
-        Barcode: {barcode_value}
-    </div>
-
-    <div style="
-        font-size:12px;
-        color:#6b7280;
-        margin-top:2px;
-    ">
-        🕒 {date_text}
-    </div>
-
-</div>
-""",
+                    card_html,
                     unsafe_allow_html=True
                 )
 
@@ -543,10 +550,6 @@ if page == "📋 Τιμές":
 # SCANNER
 # =========================================================
 
-
-# ---------------------------------------------------------
-# SCANNER COMPONENT
-# ---------------------------------------------------------
 barcode_scanner = components.declare_component(
     "barcode_scanner",
     path="scanner_component"
@@ -582,7 +585,7 @@ if "manual_search_message" not in st.session_state:
 
 
 # ---------------------------------------------------------
-# ΜΗΝΥΜΑ ΑΠΟΘΗΚΕΥΣΗΣ
+# ΑΠΟΘΗΚΕΥΤΗΚΕ
 # ---------------------------------------------------------
 if st.session_state.saved_message:
 
@@ -608,7 +611,7 @@ st.session_state.scanner_message = ""
 
 
 # ---------------------------------------------------------
-# ΕΛΕΓΧΟΣ BARCODE ΑΠΟ SCANNER
+# SCANNER RESULT
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -645,17 +648,11 @@ if barcode_result:
         st.session_state.last_scan_id = scan_id
 
 
-        # -------------------------------------------------
-        # ΤΟ ΠΡΟΪΟΝ ΥΠΑΡΧΕΙ
-        # -------------------------------------------------
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = barcode
 
 
-        # -------------------------------------------------
-        # ΤΟ ΠΡΟΪΟΝ ΔΕΝ ΥΠΑΡΧΕΙ
-        # -------------------------------------------------
         else:
 
             st.session_state.current_barcode = None
@@ -733,30 +730,24 @@ if st.session_state.manual_search_message:
 
     if message.startswith("✅"):
 
-        st.success(
-            message
-        )
+        st.success(message)
 
 
     elif message.startswith("⛔"):
 
-        st.warning(
-            message
-        )
+        st.warning(message)
 
 
     else:
 
-        st.info(
-            message
-        )
+        st.info(message)
 
 
     st.session_state.manual_search_message = ""
 
 
 # ---------------------------------------------------------
-# ΠΡΟΪΟΝ + MARKET + ΤΙΜΗ
+# ΠΡΟΪΟΝ
 # ---------------------------------------------------------
 if st.session_state.current_barcode:
 
@@ -782,9 +773,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # MARKET
-    # -----------------------------------------------------
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
@@ -796,9 +784,6 @@ if st.session_state.current_barcode:
     )
 
 
-    # -----------------------------------------------------
-    # ΤΙΜΗ
-    # -----------------------------------------------------
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -812,7 +797,7 @@ if st.session_state.current_barcode:
 
 
     # -----------------------------------------------------
-    # ΑΠΟΘΗΚΕΥΣΗ
+    # SAVE
     # -----------------------------------------------------
     if st.button(
         "💾 Αποθήκευση τιμής",
@@ -837,24 +822,14 @@ if st.session_state.current_barcode:
                     "price_records"
                 ).insert(
                     {
-                        "market":
-                            market,
-
-                        "barcode":
-                            barcode,
-
-                        "product":
-                            product,
-
-                        "price":
-                            float(price),
+                        "market": market,
+                        "barcode": barcode,
+                        "product": product,
+                        "price": float(price),
                     }
                 ).execute()
 
 
-                # -------------------------------------------------
-                # ΤΟΠΙΚΗ ΚΑΤΑΧΩΡΗΣΗ
-                # -------------------------------------------------
                 st.session_state.records.append(
                     {
                         "Ημερομηνία":
@@ -907,7 +882,7 @@ if st.session_state.current_barcode:
 
 
 # ---------------------------------------------------------
-# ΚΑΤΑΧΩΡΗΣΕΙΣ ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
+# ΚΑΤΑΧΩΡΗΣΕΙΣ ΣΥΝΕΔΡΙΑΣ
 # ---------------------------------------------------------
 if st.session_state.records:
 
@@ -928,9 +903,6 @@ if st.session_state.records:
     )
 
 
-    # -----------------------------------------------------
-    # EXCEL
-    # -----------------------------------------------------
     output = BytesIO()
 
 
@@ -946,7 +918,9 @@ if st.session_state.records:
         )
 
 
-    excel_data = output.getvalue()
+    excel_data = (
+        output.getvalue()
+    )
 
 
     excel_base64 = (

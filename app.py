@@ -132,9 +132,7 @@ div[data-testid="stRadio"] label {
 .price-product {
     font-size: 17px;
     font-weight: 700;
-
     line-height: 1.3;
-
     color: #111827;
 }
 
@@ -142,36 +140,28 @@ div[data-testid="stRadio"] label {
 .price-value {
     font-size: 27px;
     font-weight: 800;
-
     margin-top: 7px;
-
     color: #111827;
 }
 
 
 .price-market {
     margin-top: 7px;
-
     font-size: 15px;
-
     color: #374151;
 }
 
 
 .price-barcode {
     margin-top: 5px;
-
     font-size: 13px;
-
     color: #6b7280;
 }
 
 
 .price-date {
     margin-top: 2px;
-
     font-size: 13px;
-
     color: #6b7280;
 }
 
@@ -203,7 +193,181 @@ MARKETS = [
 
 
 # ---------------------------------------------------------
-# MENU
+# SESSION STATE - ΓΕΝΙΚΑ
+# ---------------------------------------------------------
+if "preview_mode" not in st.session_state:
+    st.session_state.preview_mode = False
+
+if "preview_data" not in st.session_state:
+    st.session_state.preview_data = []
+
+if "preview_return" not in st.session_state:
+    st.session_state.preview_return = "📋 Τιμές"
+
+if "preview_title" not in st.session_state:
+    st.session_state.preview_title = "Excel"
+
+if "main_page" not in st.session_state:
+    st.session_state.main_page = "📷 Scanner"
+
+
+# =========================================================
+# ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
+# =========================================================
+if st.session_state.preview_mode:
+
+    st.markdown(
+        "## 📊 Προεπισκόπηση Excel"
+    )
+
+
+    # -----------------------------------------------------
+    # ΕΠΙΣΤΡΟΦΗ
+    # -----------------------------------------------------
+    if st.button(
+        "⬅️ Επιστροφή στην εφαρμογή",
+        use_container_width=True,
+        type="primary"
+    ):
+
+        st.session_state.preview_mode = False
+
+        st.session_state.main_page = (
+            st.session_state.preview_return
+        )
+
+        st.rerun()
+
+
+    preview_df = pd.DataFrame(
+        st.session_state.preview_data
+    )
+
+
+    if preview_df.empty:
+
+        st.info(
+            "Δεν υπάρχουν δεδομένα για προεπισκόπηση."
+        )
+
+    else:
+
+        st.caption(
+            f"Σύνολο: {len(preview_df)} καταχωρήσεις"
+        )
+
+
+        # -------------------------------------------------
+        # ΠΡΟΕΠΙΣΚΟΠΗΣΗ
+        # -------------------------------------------------
+        st.dataframe(
+            preview_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
+        # -------------------------------------------------
+        # ΔΗΜΙΟΥΡΓΙΑ EXCEL
+        # -------------------------------------------------
+        preview_output = BytesIO()
+
+
+        with pd.ExcelWriter(
+            preview_output,
+            engine="openpyxl"
+        ) as writer:
+
+            preview_df.to_excel(
+                writer,
+                index=False,
+                sheet_name="Τιμές"
+            )
+
+
+            worksheet = (
+                writer.sheets["Τιμές"]
+            )
+
+
+            worksheet.freeze_panes = "A2"
+
+            worksheet.auto_filter.ref = (
+                worksheet.dimensions
+            )
+
+
+            # Αυτόματα λογικά πλάτη στηλών
+            for column_cells in worksheet.columns:
+
+                max_length = 0
+
+                column_letter = (
+                    column_cells[0]
+                    .column_letter
+                )
+
+
+                for cell in column_cells:
+
+                    try:
+
+                        cell_value = str(
+                            cell.value
+                            if cell.value is not None
+                            else ""
+                        )
+
+                        if len(cell_value) > max_length:
+                            max_length = len(cell_value)
+
+                    except:
+                        pass
+
+
+                adjusted_width = min(
+                    max(max_length + 2, 10),
+                    45
+                )
+
+
+                worksheet.column_dimensions[
+                    column_letter
+                ].width = adjusted_width
+
+
+        preview_output.seek(0)
+
+
+        # -------------------------------------------------
+        # ΚΑΤΕΒΑΣΜΑ
+        # -------------------------------------------------
+        st.download_button(
+            label="📥 Κατέβασμα Excel",
+            data=preview_output.getvalue(),
+            file_name=(
+                "times_"
+                +
+                datetime.now().strftime(
+                    "%d-%m-%Y_%H-%M"
+                )
+                +
+                ".xlsx"
+            ),
+            mime=(
+                "application/"
+                "vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            ),
+            use_container_width=True
+        )
+
+
+    st.stop()
+
+
+# ---------------------------------------------------------
+# ΚΥΡΙΟ MENU
 # ---------------------------------------------------------
 page = st.radio(
     "",
@@ -212,7 +376,8 @@ page = st.radio(
         "📋 Τιμές"
     ],
     horizontal=True,
-    label_visibility="collapsed"
+    label_visibility="collapsed",
+    key="main_page"
 )
 
 
@@ -295,6 +460,7 @@ if page == "📋 Τιμές":
                     .unique()
                     .tolist()
                 )
+
 
                 market_options = (
                     ["Όλα"]
@@ -401,7 +567,7 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # DATAFRAME ΓΙΑ EXCEL
+            # ΕΤΟΙΜΑΣΙΑ ΓΙΑ EXCEL
             # -------------------------------------------------
             export_df = pd.DataFrame()
 
@@ -480,76 +646,31 @@ if page == "📋 Τιμές":
 
 
             # -------------------------------------------------
-            # ΔΗΜΙΟΥΡΓΙΑ EXCEL
+            # ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
             # -------------------------------------------------
-            excel_output = BytesIO()
-
-
-            with pd.ExcelWriter(
-                excel_output,
-                engine="openpyxl"
-            ) as writer:
-
-                export_df.to_excel(
-                    writer,
-                    index=False,
-                    sheet_name="Τιμές"
-                )
-
-
-                worksheet = (
-                    writer.sheets["Τιμές"]
-                )
-
-
-                worksheet.column_dimensions["A"].width = 14
-                worksheet.column_dimensions["B"].width = 10
-                worksheet.column_dimensions["C"].width = 22
-                worksheet.column_dimensions["D"].width = 18
-                worksheet.column_dimensions["E"].width = 45
-                worksheet.column_dimensions["F"].width = 12
-
-
-                worksheet.freeze_panes = "A2"
-
-
-                worksheet.auto_filter.ref = (
-                    worksheet.dimensions
-                )
-
-
-                for cell in worksheet["F"][1:]:
-
-                    cell.number_format = (
-                        '0.00 "€"'
-                    )
-
-
-            excel_output.seek(0)
-
-
-            # -------------------------------------------------
-            # DOWNLOAD EXCEL
-            # -------------------------------------------------
-            st.download_button(
-                label="📥 Εξαγωγή σε Excel",
-                data=excel_output.getvalue(),
-                file_name=(
-                    "times_"
-                    +
-                    datetime.now().strftime(
-                        "%d-%m-%Y_%H-%M"
-                    )
-                    +
-                    ".xlsx"
-                ),
-                mime=(
-                    "application/"
-                    "vnd.openxmlformats-officedocument."
-                    "spreadsheetml.sheet"
-                ),
+            if st.button(
+                "📊 Προεπισκόπηση Excel",
                 use_container_width=True
-            )
+            ):
+
+                st.session_state.preview_data = (
+                    export_df
+                    .to_dict(
+                        orient="records"
+                    )
+                )
+
+                st.session_state.preview_return = (
+                    "📋 Τιμές"
+                )
+
+                st.session_state.preview_title = (
+                    "Τιμές"
+                )
+
+                st.session_state.preview_mode = True
+
+                st.rerun()
 
 
             # -------------------------------------------------
@@ -685,7 +806,7 @@ barcode_scanner = components.declare_component(
 
 
 # ---------------------------------------------------------
-# SESSION STATE
+# SESSION STATE SCANNER
 # ---------------------------------------------------------
 if "records" not in st.session_state:
     st.session_state.records = []
@@ -725,7 +846,7 @@ if st.session_state.saved_message:
 
 
 # ---------------------------------------------------------
-# SCANNER
+# SCANNER COMPONENT
 # ---------------------------------------------------------
 barcode_result = barcode_scanner(
     reset_token=st.session_state.reset_token,
@@ -739,7 +860,7 @@ st.session_state.scanner_message = ""
 
 
 # ---------------------------------------------------------
-# ΕΛΕΓΧΟΣ BARCODE ΑΠΟ SCANNER
+# ΕΛΕΓΧΟΣ BARCODE
 # ---------------------------------------------------------
 if barcode_result:
 
@@ -898,9 +1019,11 @@ if st.session_state.current_barcode:
         "### 🛒 Προϊόν"
     )
 
+
     st.markdown(
         f"**{product}**"
     )
+
 
     st.caption(
         f"Barcode: {barcode}"
@@ -985,8 +1108,8 @@ if st.session_state.current_barcode:
                         "Προϊόν":
                             product,
 
-                        "Τιμή":
-                            price,
+                        "Τιμή (€)":
+                            float(price),
                     }
                 )
 
@@ -1038,66 +1161,28 @@ if st.session_state.records:
 
 
     # -----------------------------------------------------
-    # EXCEL ΤΡΕΧΟΥΣΑΣ ΣΥΝΕΔΡΙΑΣ
+    # ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL SCANNER
     # -----------------------------------------------------
-    output = BytesIO()
+    if st.button(
+        "📊 Προεπισκόπηση Excel",
+        use_container_width=True,
+        key="scanner_excel_preview"
+    ):
 
-
-    with pd.ExcelWriter(
-        output,
-        engine="openpyxl"
-    ) as writer:
-
-        df.to_excel(
-            writer,
-            index=False,
-            sheet_name="Τιμές"
-        )
-
-
-        worksheet = (
-            writer.sheets["Τιμές"]
-        )
-
-
-        worksheet.column_dimensions["A"].width = 14
-        worksheet.column_dimensions["B"].width = 10
-        worksheet.column_dimensions["C"].width = 22
-        worksheet.column_dimensions["D"].width = 18
-        worksheet.column_dimensions["E"].width = 45
-        worksheet.column_dimensions["F"].width = 12
-
-
-        worksheet.freeze_panes = "A2"
-
-
-        worksheet.auto_filter.ref = (
-            worksheet.dimensions
-        )
-
-
-    output.seek(0)
-
-
-    # -----------------------------------------------------
-    # DOWNLOAD EXCEL
-    # -----------------------------------------------------
-    st.download_button(
-        label="📥 Κατέβασμα Excel",
-        data=output.getvalue(),
-        file_name=(
-            "local_items_prices_"
-            +
-            datetime.now().strftime(
-                "%d-%m-%Y_%H-%M"
+        st.session_state.preview_data = (
+            df.to_dict(
+                orient="records"
             )
-            +
-            ".xlsx"
-        ),
-        mime=(
-            "application/"
-            "vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
-        use_container_width=True
-    )
+        )
+
+        st.session_state.preview_return = (
+            "📷 Scanner"
+        )
+
+        st.session_state.preview_title = (
+            "Scanner"
+        )
+
+        st.session_state.preview_mode = True
+
+        st.rerun()

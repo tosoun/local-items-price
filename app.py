@@ -223,6 +223,9 @@ if "prices_unlocked" not in st.session_state:
 if "confirm_delete_all" not in st.session_state:
     st.session_state.confirm_delete_all = False
 
+if "delete_success" not in st.session_state:
+    st.session_state.delete_success = False
+
 
 # =========================================================
 # ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
@@ -417,10 +420,10 @@ page = st.radio(
 
 
 # =========================================================
-# SCANNER = ΠΑΝΤΑ ΧΩΡΙΣ ΚΩΔΙΚΟ
-# ΚΑΙ ΞΑΝΑΚΛΕΙΔΩΝΕΙ ΤΙΣ ΤΙΜΕΣ
+# SCANNER = ΧΩΡΙΣ ΚΩΔΙΚΟ
 # =========================================================
 if page == "📷 Scanner":
+
     st.session_state.prices_unlocked = False
     st.session_state.confirm_delete_all = False
 
@@ -430,9 +433,9 @@ if page == "📷 Scanner":
 # =========================================================
 if page == "📋 Τιμές":
 
-    # -----------------------------------------------------
-    # ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ ΜΟΝΟ ΓΙΑ ΤΙΜΕΣ
-    # -----------------------------------------------------
+    # =====================================================
+    # ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ
+    # =====================================================
     if not st.session_state.prices_unlocked:
 
         st.markdown(
@@ -467,15 +470,28 @@ if page == "📋 Τιμές":
 
 
     # =====================================================
-    # ΚΑΤΑΧΩΡΗΜΕΝΕΣ ΤΙΜΕΣ
+    # ΤΙΜΕΣ
     # =====================================================
     st.markdown(
         "## 📋 Καταχωρημένες Τιμές"
     )
 
-    # -----------------------------------------------------
+
+    # =====================================================
+    # ΜΗΝΥΜΑ ΕΠΙΤΥΧΗΜΕΝΗΣ ΔΙΑΓΡΑΦΗΣ
+    # =====================================================
+    if st.session_state.delete_success:
+
+        st.success(
+            "✅ Όλες οι καταχωρήσεις διαγράφηκαν από τη βάση."
+        )
+
+        st.session_state.delete_success = False
+
+
+    # =====================================================
     # ΑΝΑΝΕΩΣΗ
-    # -----------------------------------------------------
+    # =====================================================
     if st.button(
         "🔄 Ανανέωση",
         use_container_width=True
@@ -483,21 +499,25 @@ if page == "📋 Τιμές":
         st.rerun()
 
 
-    # -----------------------------------------------------
-    # DEL - ΔΙΑΓΡΑΦΗ ΟΛΗΣ ΤΗΣ ΛΙΣΤΑΣ
-    # -----------------------------------------------------
+    # =====================================================
+    # DEL
+    # =====================================================
     if st.button(
         "🗑️ DEL – Διαγραφή λίστας",
         use_container_width=True,
         key="delete_all_button"
     ):
+
         st.session_state.confirm_delete_all = True
 
 
+    # =====================================================
+    # ΕΠΙΒΕΒΑΙΩΣΗ DEL
+    # =====================================================
     if st.session_state.confirm_delete_all:
 
         st.warning(
-            "⚠️ Θα διαγραφούν ΟΛΕΣ οι καταχωρήσεις από τη λίστα."
+            "⚠️ ΠΡΟΣΟΧΗ: Θα διαγραφούν ΟΛΕΣ οι καταχωρήσεις από το Supabase."
         )
 
         col_cancel, col_delete = st.columns(2)
@@ -513,6 +533,7 @@ if page == "📋 Τιμές":
                 st.session_state.confirm_delete_all = False
                 st.rerun()
 
+
         with col_delete:
 
             if st.button(
@@ -524,25 +545,68 @@ if page == "📋 Τιμές":
 
                 try:
 
+                    # =========================================
+                    # ΠΡΑΓΜΑΤΙΚΗ ΔΙΑΓΡΑΦΗ ΑΠΟ SUPABASE
+                    # =========================================
                     supabase.table(
                         "price_records"
-                    ).delete().gte(
+                    ).delete().neq(
                         "id",
-                        0
+                        -1
                     ).execute()
 
-                    st.session_state.confirm_delete_all = False
 
-                    st.success(
-                        "✅ Η λίστα διαγράφηκε."
+                    # =========================================
+                    # ΕΛΕΓΧΟΣ ΜΕΤΑ ΤΗ ΔΙΑΓΡΑΦΗ
+                    # =========================================
+                    check_response = (
+                        supabase
+                        .table("price_records")
+                        .select("id")
+                        .execute()
                     )
 
-                    st.rerun()
+                    remaining_rows = (
+                        check_response.data
+                        if check_response.data
+                        else []
+                    )
+
+
+                    # =========================================
+                    # ΑΝ ΟΝΤΩΣ ΕΓΙΝΑΝ 0
+                    # =========================================
+                    if len(remaining_rows) == 0:
+
+                        st.session_state.confirm_delete_all = False
+
+                        # Καθαρίζουμε και την τοπική λίστα
+                        if "records" in st.session_state:
+                            st.session_state.records = []
+
+                        st.session_state.delete_success = True
+
+                        st.rerun()
+
+
+                    # =========================================
+                    # ΑΝ ΥΠΑΡΧΟΥΝ ΑΚΟΜΑ ΕΓΓΡΑΦΕΣ
+                    # =========================================
+                    else:
+
+                        st.error(
+                            "❌ Η διαγραφή δεν ολοκληρώθηκε στη βάση."
+                        )
+
+                        st.warning(
+                            f"Παραμένουν {len(remaining_rows)} καταχωρήσεις."
+                        )
+
 
                 except Exception as e:
 
                     st.error(
-                        "❌ Δεν έγινε η διαγραφή."
+                        "❌ Σφάλμα κατά τη διαγραφή από το Supabase."
                     )
 
                     st.caption(
@@ -550,6 +614,9 @@ if page == "📋 Τιμές":
                     )
 
 
+    # =====================================================
+    # ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ
+    # =====================================================
     try:
 
         response = (
@@ -565,19 +632,25 @@ if page == "📋 Τιμές":
 
         rows = response.data
 
+
+        # =================================================
+        # ΚΕΝΗ ΒΑΣΗ
+        # =================================================
         if not rows:
 
             st.info(
                 "Δεν υπάρχουν ακόμη καταχωρήσεις."
             )
 
+
         else:
 
             df_prices = pd.DataFrame(rows)
 
-            # -------------------------------------------------
-            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ ΕΛΛΑΔΑΣ
-            # -------------------------------------------------
+
+            # =================================================
+            # ΗΜΕΡΟΜΗΝΙΑ / ΩΡΑ
+            # =================================================
             if "created_at" in df_prices.columns:
 
                 df_prices["created_at"] = pd.to_datetime(
@@ -591,9 +664,10 @@ if page == "📋 Τιμές":
                     .dt.tz_convert("Europe/Athens")
                 )
 
-            # -------------------------------------------------
-            # ΦΙΛΤΡΟ MARKET
-            # -------------------------------------------------
+
+            # =================================================
+            # MARKET FILTER
+            # =================================================
             if "market" in df_prices.columns:
 
                 market_options = (
@@ -612,11 +686,13 @@ if page == "📋 Τιμές":
 
                 market_options = ["Όλα"]
 
+
             selected_market = st.selectbox(
                 "🏪 Market",
                 market_options,
                 key="filter_market"
             )
+
 
             if (
                 selected_market != "Όλα"
@@ -630,9 +706,10 @@ if page == "📋 Τιμές":
                     selected_market
                 ]
 
-            # -------------------------------------------------
-            # ΦΙΛΤΡΟ ΠΟΛΗΣ
-            # -------------------------------------------------
+
+            # =================================================
+            # CITY FILTER
+            # =================================================
             if "city" in df_prices.columns:
 
                 valid_cities = (
@@ -659,11 +736,13 @@ if page == "📋 Τιμές":
 
                 city_options = ["Όλες"]
 
+
             selected_city = st.selectbox(
                 "🏙️ Πόλη",
                 city_options,
                 key="filter_city"
             )
+
 
             if (
                 selected_city != "Όλες"
@@ -677,13 +756,15 @@ if page == "📋 Τιμές":
                     selected_city
                 ]
 
-            # -------------------------------------------------
-            # ΑΝΑΖΗΤΗΣΗ
-            # -------------------------------------------------
+
+            # =================================================
+            # SEARCH
+            # =================================================
             search_text = st.text_input(
                 "🔎 Αναζήτηση",
                 placeholder="Προϊόν ή barcode"
             )
+
 
             if search_text:
 
@@ -703,6 +784,7 @@ if page == "📋 Τιμές":
                     index=df_prices.index
                 )
 
+
                 if "product" in df_prices.columns:
 
                     product_search = (
@@ -716,6 +798,7 @@ if page == "📋 Τιμές":
                         )
                     )
 
+
                 if "barcode" in df_prices.columns:
 
                     barcode_search = (
@@ -728,19 +811,23 @@ if page == "📋 Τιμές":
                         )
                     )
 
+
                 df_prices = df_prices[
                     product_search |
                     barcode_search
                 ]
 
+
             st.caption(
                 f"Σύνολο: {len(df_prices)} καταχωρήσεις"
             )
 
-            # -------------------------------------------------
-            # DATAFRAME ΓΙΑ EXCEL
-            # -------------------------------------------------
+
+            # =================================================
+            # EXPORT DATAFRAME
+            # =================================================
             export_df = pd.DataFrame()
+
 
             if "created_at" in df_prices.columns:
 
@@ -759,6 +846,7 @@ if page == "📋 Τιμές":
                 export_df["Ημερομηνία"] = ""
                 export_df["Ώρα"] = ""
 
+
             if "market" in df_prices.columns:
 
                 export_df["Market"] = (
@@ -770,6 +858,7 @@ if page == "📋 Τιμές":
 
                 export_df["Market"] = ""
 
+
             if "city" in df_prices.columns:
 
                 export_df["Πόλη"] = (
@@ -780,6 +869,7 @@ if page == "📋 Τιμές":
             else:
 
                 export_df["Πόλη"] = ""
+
 
             if "barcode" in df_prices.columns:
 
@@ -793,6 +883,7 @@ if page == "📋 Τιμές":
 
                 export_df["Barcode"] = ""
 
+
             if "product" in df_prices.columns:
 
                 export_df["Προϊόν"] = (
@@ -803,6 +894,7 @@ if page == "📋 Τιμές":
             else:
 
                 export_df["Προϊόν"] = ""
+
 
             if "price" in df_prices.columns:
 
@@ -815,9 +907,10 @@ if page == "📋 Τιμές":
 
                 export_df["Τιμή (€)"] = ""
 
-            # -------------------------------------------------
-            # ΠΡΟΕΠΙΣΚΟΠΗΣΗ EXCEL
-            # -------------------------------------------------
+
+            # =================================================
+            # EXCEL PREVIEW
+            # =================================================
             if st.button(
                 "📊 Προεπισκόπηση Excel",
                 use_container_width=True
@@ -837,9 +930,10 @@ if page == "📋 Τιμές":
 
                 st.rerun()
 
-            # -------------------------------------------------
-            # ΚΑΡΤΕΣ ΤΙΜΩΝ
-            # -------------------------------------------------
+
+            # =================================================
+            # ΚΑΡΤΕΣ
+            # =================================================
             for _, row in df_prices.iterrows():
 
                 product_value = row.get(
@@ -867,6 +961,7 @@ if page == "📋 Τιμές":
                     0
                 )
 
+
                 if pd.isna(product_value):
                     product_value = ""
 
@@ -878,6 +973,7 @@ if page == "📋 Τιμές":
 
                 if pd.isna(barcode_value):
                     barcode_value = ""
+
 
                 product_value = html.escape(
                     str(product_value)
@@ -895,6 +991,7 @@ if page == "📋 Τιμές":
                     str(barcode_value)
                 )
 
+
                 try:
 
                     price_text = (
@@ -907,11 +1004,13 @@ if page == "📋 Τιμές":
                         price_value
                     )
 
+
                 date_text = ""
 
                 created_at_value = row.get(
                     "created_at"
                 )
+
 
                 if (
                     created_at_value is not None
@@ -933,6 +1032,7 @@ if page == "📋 Τιμές":
                             created_at_value
                         )
 
+
                 city_html = ""
 
                 if city_value:
@@ -942,6 +1042,7 @@ if page == "📋 Τιμές":
                         f'🏙️ {city_value}'
                         f'</div>'
                     )
+
 
                 card_html = (
                     '<div class="price-card">'
@@ -954,10 +1055,12 @@ if page == "📋 Τιμές":
                     '</div>'
                 )
 
+
                 st.markdown(
                     card_html,
                     unsafe_allow_html=True
                 )
+
 
     except Exception as e:
 
@@ -968,6 +1071,7 @@ if page == "📋 Τιμές":
         st.caption(
             str(e)
         )
+
 
     st.stop()
 
@@ -1063,6 +1167,7 @@ if barcode_result:
 
         scan_id = barcode
 
+
     if (
         scan_id !=
         st.session_state.last_scan_id
@@ -1070,11 +1175,13 @@ if barcode_result:
 
         st.session_state.last_scan_id = scan_id
 
+
         if barcode in PRODUCTS:
 
             st.session_state.current_barcode = (
                 barcode
             )
+
 
         else:
 
@@ -1096,11 +1203,13 @@ st.markdown(
     "### 🔎 Χειροκίνητη αναζήτηση"
 )
 
+
 manual_barcode = st.text_input(
     "Barcode προϊόντος",
     placeholder="Πληκτρολόγησε το barcode",
     key="manual_barcode_input"
 )
+
 
 if st.button(
     "🔎 Αναζήτηση προϊόντος",
@@ -1109,11 +1218,13 @@ if st.button(
 
     code = manual_barcode.strip()
 
+
     if not code:
 
         st.session_state.manual_search_message = (
             "⚠️ Πληκτρολόγησε πρώτα ένα barcode."
         )
+
 
     elif code in PRODUCTS:
 
@@ -1124,6 +1235,7 @@ if st.button(
         )
 
         st.rerun()
+
 
     else:
 
@@ -1145,17 +1257,21 @@ if st.session_state.manual_search_message:
         st.session_state.manual_search_message
     )
 
+
     if message.startswith("✅"):
 
         st.success(message)
+
 
     elif message.startswith("⛔"):
 
         st.warning(message)
 
+
     else:
 
         st.info(message)
+
 
     st.session_state.manual_search_message = ""
 
@@ -1173,18 +1289,25 @@ if st.session_state.current_barcode:
         barcode
     ]
 
+
     st.markdown(
         "### 🛒 Προϊόν"
     )
+
 
     st.markdown(
         f"**{product}**"
     )
 
+
     st.caption(
         f"Barcode: {barcode}"
     )
 
+
+    # =====================================================
+    # MARKET
+    # =====================================================
     market = st.selectbox(
         "🏪 Market",
         MARKETS,
@@ -1195,6 +1318,10 @@ if st.session_state.current_barcode:
         )
     )
 
+
+    # =====================================================
+    # ΠΟΛΗ
+    # =====================================================
     city = st.selectbox(
         "🏙️ Πόλη *",
         CITIES,
@@ -1205,6 +1332,10 @@ if st.session_state.current_barcode:
         )
     )
 
+
+    # =====================================================
+    # ΤΙΜΗ
+    # =====================================================
     price = st.number_input(
         "💶 Τιμή (€)",
         min_value=0.00,
@@ -1216,11 +1347,16 @@ if st.session_state.current_barcode:
         )
     )
 
+
+    # =====================================================
+    # ΑΠΟΘΗΚΕΥΣΗ
+    # =====================================================
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
         use_container_width=True
     ):
+
 
         if city == "— Επίλεξε πόλη —":
 
@@ -1228,18 +1364,24 @@ if st.session_state.current_barcode:
                 "⚠️ Επίλεξε πρώτα πόλη."
             )
 
+
         elif price <= 0:
 
             st.warning(
                 "⚠️ Γράψε πρώτα την τιμή."
             )
 
+
         else:
 
             now = datetime.now()
 
+
             try:
 
+                # =========================================
+                # SUPABASE
+                # =========================================
                 supabase.table(
                     "price_records"
                 ).insert(
@@ -1252,6 +1394,10 @@ if st.session_state.current_barcode:
                     }
                 ).execute()
 
+
+                # =========================================
+                # ΤΟΠΙΚΕΣ ΚΑΤΑΧΩΡΗΣΕΙΣ
+                # =========================================
                 st.session_state.records.append(
                     {
                         "Ημερομηνία":
@@ -1281,13 +1427,22 @@ if st.session_state.current_barcode:
                     }
                 )
 
+
+                # =========================================
+                # RESET
+                # =========================================
                 st.session_state.current_barcode = None
+
                 st.session_state.entry_counter += 1
+
                 st.session_state.scanner_message = ""
+
                 st.session_state.reset_token += 1
+
                 st.session_state.saved_message = True
 
                 st.rerun()
+
 
             except Exception as e:
 
@@ -1309,15 +1464,18 @@ if st.session_state.records:
         "### 📋 Καταχωρήσεις"
     )
 
+
     df = pd.DataFrame(
         st.session_state.records
     )
+
 
     st.dataframe(
         df,
         use_container_width=True,
         hide_index=True
     )
+
 
     if st.button(
         "📊 Προεπισκόπηση Excel",

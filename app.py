@@ -64,7 +64,7 @@ iframe {
 
 
 /* =======================================================
-   ΝΕΟ MENU SCANNER / ΤΙΜΕΣ
+   ΚΑΘΑΡΟ TOP MENU
 ======================================================= */
 
 div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
@@ -73,80 +73,38 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
     top: 0 !important;
     z-index: 999999 !important;
 
-    background: rgba(255,255,255,0.97) !important;
+    background: #ffffff !important;
 
-    padding: 7px 8px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+
     margin-top: 0 !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 8px !important;
 
-    border: 1px solid #e5e7eb !important;
-    border-radius: 14px !important;
+    border-bottom: 1px solid #e5e7eb !important;
 
-    box-shadow: 0 3px 12px rgba(0,0,0,0.08) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
 }
 
-
 div[data-testid="stRadio"] {
-    background: transparent !important;
+    position: relative !important;
+    background: white !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
-    gap: 6px !important;
-    width: 100% !important;
+    align-items: center !important;
+    gap: 20px !important;
 }
-
 
 div[data-testid="stRadio"] label {
-    flex: 1 !important;
-
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-
-    min-height: 44px !important;
-
+    font-size: 17px !important;
+    font-weight: 600 !important;
     margin: 0 !important;
-    padding: 8px 12px !important;
-
-    border-radius: 10px !important;
-
-    font-size: 16px !important;
-    font-weight: 650 !important;
-
-    cursor: pointer !important;
-
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        box-shadow 0.2s ease !important;
-}
-
-
-/* Κρύβουμε τον κύκλο του radio */
-div[data-testid="stRadio"] label > div:first-child {
-    display: none !important;
-}
-
-
-/* ΕΠΙΛΕΓΜΕΝΟ TAB */
-div[data-testid="stRadio"] label:has(input:checked) {
-    background: #111827 !important;
-    color: #ffffff !important;
-
-    box-shadow:
-        0 2px 7px rgba(0,0,0,0.16) !important;
-}
-
-
-/* ΜΗ ΕΠΙΛΕΓΜΕΝΟ TAB */
-div[data-testid="stRadio"] label:not(:has(input:checked)) {
-    background: transparent !important;
-    color: #374151 !important;
+    padding: 4px 0 !important;
 }
 
 
@@ -403,20 +361,15 @@ if st.session_state.preview_mode:
                 function openExcel() {{
 
                     const base64 = "{excel_b64}";
-
                     const binary = atob(base64);
-
-                    const bytes = new Uint8Array(
-                        binary.length
-                    );
+                    const bytes = new Uint8Array(binary.length);
 
                     for (
                         let i = 0;
                         i < binary.length;
                         i++
                     ) {{
-                        bytes[i] =
-                            binary.charCodeAt(i);
+                        bytes[i] = binary.charCodeAt(i);
                     }}
 
                     const blob = new Blob(
@@ -518,7 +471,6 @@ if page == "📋 Τιμές":
             if access_code == "2845":
 
                 st.session_state.prices_unlocked = True
-
                 st.rerun()
 
             else:
@@ -606,9 +558,6 @@ if page == "📋 Τιμές":
 
                 try:
 
-                    # =========================================
-                    # ΔΙΑΓΡΑΦΗ ΑΠΟ SUPABASE
-                    # =========================================
                     supabase.table(
                         "price_records"
                     ).delete().neq(
@@ -617,9 +566,6 @@ if page == "📋 Τιμές":
                     ).execute()
 
 
-                    # =========================================
-                    # ΕΛΕΓΧΟΣ ΜΕΤΑ ΤΗ ΔΙΑΓΡΑΦΗ
-                    # =========================================
                     check_response = (
                         supabase
                         .table("price_records")
@@ -686,9 +632,6 @@ if page == "📋 Τιμές":
         rows = response.data
 
 
-        # =================================================
-        # ΚΕΝΗ ΒΑΣΗ
-        # =================================================
         if not rows:
 
             st.info(
@@ -1432,9 +1375,6 @@ if st.session_state.current_barcode:
 
             try:
 
-                # =========================================
-                # SUPABASE
-                # =========================================
                 supabase.table(
                     "price_records"
                 ).insert(
@@ -1448,9 +1388,6 @@ if st.session_state.current_barcode:
                 ).execute()
 
 
-                # =========================================
-                # ΤΟΠΙΚΕΣ ΚΑΤΑΧΩΡΗΣΕΙΣ
-                # =========================================
                 st.session_state.records.append(
                     {
                         "Ημερομηνία":
@@ -1481,9 +1418,6 @@ if st.session_state.current_barcode:
                 )
 
 
-                # =========================================
-                # RESET
-                # =========================================
                 st.session_state.current_barcode = None
 
                 st.session_state.entry_counter += 1

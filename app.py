@@ -64,7 +64,7 @@ iframe {
 
 
 /* =======================================================
-   STICKY MENU
+   ΝΕΟ MENU SCANNER / ΤΙΜΕΣ
 ======================================================= */
 
 div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
@@ -72,32 +72,81 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
     position: sticky !important;
     top: 0 !important;
     z-index: 999999 !important;
-    background: #ffffff !important;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
+
+    background: rgba(255,255,255,0.97) !important;
+
+    padding: 7px 8px !important;
     margin-top: 0 !important;
-    margin-bottom: 8px !important;
-    border-bottom: 1px solid #e5e7eb !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
+    margin-bottom: 12px !important;
+
+    border: 1px solid #e5e7eb !important;
+    border-radius: 14px !important;
+
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08) !important;
 }
 
+
 div[data-testid="stRadio"] {
-    position: relative !important;
-    background: white !important;
+    background: transparent !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
+
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
-    align-items: center !important;
-    gap: 18px !important;
+    gap: 6px !important;
+    width: 100% !important;
 }
 
+
 div[data-testid="stRadio"] label {
-    font-size: 17px !important;
-    font-weight: 600 !important;
+    flex: 1 !important;
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    min-height: 44px !important;
+
+    margin: 0 !important;
+    padding: 8px 12px !important;
+
+    border-radius: 10px !important;
+
+    font-size: 16px !important;
+    font-weight: 650 !important;
+
+    cursor: pointer !important;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease !important;
+}
+
+
+/* Κρύβουμε τον κύκλο του radio */
+div[data-testid="stRadio"] label > div:first-child {
+    display: none !important;
+}
+
+
+/* ΕΠΙΛΕΓΜΕΝΟ TAB */
+div[data-testid="stRadio"] label:has(input:checked) {
+    background: #111827 !important;
+    color: #ffffff !important;
+
+    box-shadow:
+        0 2px 7px rgba(0,0,0,0.16) !important;
+}
+
+
+/* ΜΗ ΕΠΙΛΕΓΜΕΝΟ TAB */
+div[data-testid="stRadio"] label:not(:has(input:checked)) {
+    background: transparent !important;
+    color: #374151 !important;
 }
 
 
@@ -325,6 +374,7 @@ if st.session_state.preview_mode:
         components.html(
             f"""
             <html>
+
             <body style="
                 margin:0;
                 padding:0;
@@ -353,15 +403,20 @@ if st.session_state.preview_mode:
                 function openExcel() {{
 
                     const base64 = "{excel_b64}";
+
                     const binary = atob(base64);
-                    const bytes = new Uint8Array(binary.length);
+
+                    const bytes = new Uint8Array(
+                        binary.length
+                    );
 
                     for (
                         let i = 0;
                         i < binary.length;
                         i++
                     ) {{
-                        bytes[i] = binary.charCodeAt(i);
+                        bytes[i] =
+                            binary.charCodeAt(i);
                     }}
 
                     const blob = new Blob(
@@ -372,16 +427,20 @@ if st.session_state.preview_mode:
                         }}
                     );
 
-                    const url = URL.createObjectURL(blob);
+                    const url =
+                        URL.createObjectURL(blob);
 
-                    const a = document.createElement("a");
+                    const a =
+                        document.createElement("a");
 
                     a.href = url;
                     a.download = "{file_name}";
                     a.target = "_blank";
 
                     document.body.appendChild(a);
+
                     a.click();
+
                     document.body.removeChild(a);
 
                     setTimeout(
@@ -396,6 +455,7 @@ if st.session_state.preview_mode:
                 </script>
 
             </body>
+
             </html>
             """,
             height=65
@@ -458,6 +518,7 @@ if page == "📋 Τιμές":
             if access_code == "2845":
 
                 st.session_state.prices_unlocked = True
+
                 st.rerun()
 
             else:
@@ -478,7 +539,7 @@ if page == "📋 Τιμές":
 
 
     # =====================================================
-    # ΜΗΝΥΜΑ ΕΠΙΤΥΧΗΜΕΝΗΣ ΔΙΑΓΡΑΦΗΣ
+    # ΜΗΝΥΜΑ ΔΙΑΓΡΑΦΗΣ
     # =====================================================
     if st.session_state.delete_success:
 
@@ -546,7 +607,7 @@ if page == "📋 Τιμές":
                 try:
 
                     # =========================================
-                    # ΠΡΑΓΜΑΤΙΚΗ ΔΙΑΓΡΑΦΗ ΑΠΟ SUPABASE
+                    # ΔΙΑΓΡΑΦΗ ΑΠΟ SUPABASE
                     # =========================================
                     supabase.table(
                         "price_records"
@@ -573,14 +634,10 @@ if page == "📋 Τιμές":
                     )
 
 
-                    # =========================================
-                    # ΑΝ ΟΝΤΩΣ ΕΓΙΝΑΝ 0
-                    # =========================================
                     if len(remaining_rows) == 0:
 
                         st.session_state.confirm_delete_all = False
 
-                        # Καθαρίζουμε και την τοπική λίστα
                         if "records" in st.session_state:
                             st.session_state.records = []
 
@@ -588,10 +645,6 @@ if page == "📋 Τιμές":
 
                         st.rerun()
 
-
-                    # =========================================
-                    # ΑΝ ΥΠΑΡΧΟΥΝ ΑΚΟΜΑ ΕΓΓΡΑΦΕΣ
-                    # =========================================
                     else:
 
                         st.error(

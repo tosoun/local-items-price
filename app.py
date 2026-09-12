@@ -1167,6 +1167,31 @@ barcode_result = barcode_scanner(
     default=None
 )
 
+
+# =========================================================
+# COPYRIGHT
+# =========================================================
+st.markdown(
+    """
+    <div style="
+        width:100%;
+        text-align:right;
+        font-size:11px;
+        font-weight:400;
+        color:#8a8f98;
+        margin-top:-4px;
+        margin-bottom:6px;
+        padding-right:4px;
+        line-height:1.2;
+        letter-spacing:0.1px;
+    ">
+        © 2026 tosounidis — All rights reserved
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
 st.session_state.scanner_message = ""
 
 

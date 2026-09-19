@@ -1560,7 +1560,8 @@ if st.session_state.current_barcode:
         margin-left: auto !important;
         margin-right: auto !important;
         position: relative !important;
-        left: 0 !important;
+        /* Αντιστάθμιση της μετατόπισης του Streamlit στο dialog. */
+        transform: translateX(-18px) !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
     }

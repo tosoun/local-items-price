@@ -271,6 +271,16 @@ PRODUCTS = {
 }
 
 
+# Προϊόντα της λίστας χωρίς barcode: εσωτερικά αναγνωριστικά μόνο
+# για τη χειροκίνητη αναζήτηση (δεν αποθηκεύονται ως barcode).
+PRODUCTS.update({
+    "NO_BARCODE_1": "ΦΕΤΑ ΧΩΤΟΣ ΧΥΜΑ ΔΟΧΕΙΟ",
+    "NO_BARCODE_2": "ΦΕΤΑ ΑΒΡΑΜΟΥΛΗ ΧΥΜΑ",
+    "NO_BARCODE_3": "ΦΕΤΑ ΕΛΑΣΣΟΝΑΣ ΕΞΑΡΧΟΣ",
+})
+NO_BARCODE_IDS = {"NO_BARCODE_1", "NO_BARCODE_2", "NO_BARCODE_3"}
+
+
 # =========================================================
 # MARKETS
 # =========================================================
@@ -1407,7 +1417,10 @@ if st.session_state.manual_matches:
     selected_code = st.selectbox(
         "Επίλεξε προϊόν",
         st.session_state.manual_matches,
-        format_func=lambda code: f"{PRODUCTS[code]} — {code}",
+        format_func=lambda code: (
+            PRODUCTS[code] if code in NO_BARCODE_IDS
+            else f"{PRODUCTS[code]} — {code}"
+        ),
         key="manual_selected_product"
     )
     if st.button(
@@ -1473,9 +1486,10 @@ if st.session_state.current_barcode:
     )
 
 
-    st.caption(
-        f"Barcode: {barcode}"
-    )
+    if barcode in NO_BARCODE_IDS:
+        st.caption("Χωρίς barcode — χειροκίνητη καταχώρηση")
+    else:
+        st.caption(f"Barcode: {barcode}")
 
 
     # =====================================================
@@ -1559,7 +1573,7 @@ if st.session_state.current_barcode:
                     {
                         "market": market,
                         "city": city,
-                        "barcode": barcode,
+                        "barcode": "" if barcode in NO_BARCODE_IDS else barcode,
                         "product": product,
                         "price": float(price),
                     }
@@ -1585,7 +1599,7 @@ if st.session_state.current_barcode:
                             city,
 
                         "Barcode":
-                            barcode,
+                            "" if barcode in NO_BARCODE_IDS else barcode,
 
                         "Προϊόν":
                             product,

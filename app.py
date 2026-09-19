@@ -1345,50 +1345,79 @@ st.markdown(
 
 
 # =========================================================
-# MANUAL BARCODE
+# MANUAL SEARCH BY BARCODE OR DESCRIPTION
 # =========================================================
-manual_barcode = st.text_input(
-    "Barcode προϊόντος",
-    placeholder="Πληκτρολόγησε το barcode",
+manual_query = st.text_input(
+    "Barcode ή περιγραφή προϊόντος",
+    placeholder="Πληκτρολόγησε barcode ή μέρος της περιγραφής",
     key="manual_barcode_input"
 )
 
+if "manual_matches" not in st.session_state:
+    st.session_state.manual_matches = []
 
 if st.button(
     "🔎 Αναζήτηση προϊόντος",
     use_container_width=True,
     key="manual_search_button"
 ):
+    query = manual_query.strip()
+    st.session_state.manual_matches = []
+    st.session_state.current_barcode = None
 
-    code = manual_barcode.strip()
-
-
-    if not code:
-
+    if not query:
         st.session_state.manual_search_message = (
-            "⚠️ Πληκτρολόγησε πρώτα ένα barcode."
+            "⚠️ Πληκτρολόγησε barcode ή περιγραφή προϊόντος."
         )
-
-
-    elif code in PRODUCTS:
-
-        st.session_state.current_barcode = code
-
-        st.session_state.manual_search_message = (
-            "✅ Το προϊόν βρέθηκε."
-        )
-
-        st.rerun()
-
-
+    elif query in PRODUCTS:
+        st.session_state.current_barcode = query
+        st.session_state.manual_search_message = "✅ Το προϊόν βρέθηκε."
     else:
+        # Αναζήτηση χωρίς διάκριση πεζών/κεφαλαίων και τόνων.
+        import unicodedata
 
-        st.session_state.current_barcode = None
+        def normalize_search(value):
+            value = unicodedata.normalize("NFD", str(value).casefold())
+            return "".join(
+                char for char in value
+                if unicodedata.category(char) != "Mn"
+            )
 
-        st.session_state.manual_search_message = (
-            "⛔ Ο κωδικός δεν υπάρχει στη βάση προϊόντων."
-        )
+        normalized_query = normalize_search(query)
+        matches = [
+            code for code, description in PRODUCTS.items()
+            if normalized_query in normalize_search(description)
+            or query in code
+        ]
+        if len(matches) == 1:
+            st.session_state.current_barcode = matches[0]
+            st.session_state.manual_search_message = "✅ Το προϊόν βρέθηκε."
+        elif matches:
+            st.session_state.manual_matches = matches
+            st.session_state.manual_search_message = (
+                f"🔎 Βρέθηκαν {len(matches)} προϊόντα. Επίλεξε το σωστό."
+            )
+        else:
+            st.session_state.manual_search_message = (
+                "⛔ Δεν βρέθηκε προϊόν με αυτό το barcode ή την περιγραφή."
+            )
+    st.rerun()
 
+if st.session_state.manual_matches:
+    selected_code = st.selectbox(
+        "Επίλεξε προϊόν",
+        st.session_state.manual_matches,
+        format_func=lambda code: f"{PRODUCTS[code]} — {code}",
+        key="manual_selected_product"
+    )
+    if st.button(
+        "✅ Επιλογή προϊόντος",
+        use_container_width=True,
+        key="manual_select_button"
+    ):
+        st.session_state.current_barcode = selected_code
+        st.session_state.manual_matches = []
+        st.session_state.manual_search_message = "✅ Το προϊόν επιλέχθηκε."
         st.rerun()
 
 

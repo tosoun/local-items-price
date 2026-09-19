@@ -1532,33 +1532,49 @@ if st.session_state.current_barcode:
         # Τετράγωνο αριθμητικό πληκτρολόγιο, διάταξη τηλεφώνου.
         st.markdown("""
         <style>
+        /* Το Streamlit στοιβάζει τις στήλες στο κινητό. Εδώ τις
+           κρατάμε υποχρεωτικά σε τριάδες, μόνο μέσα στο παράθυρο τιμής. */
         div[role="dialog"] {
-            width: min(96vw, 390px) !important;
+            width: min(94vw, 390px) !important;
             max-width: 390px !important;
+            max-height: 94dvh !important;
         }
-        div[role="dialog"] div[data-testid="stButton"] button {
-            min-height: 78px !important;
-            height: 78px !important;
+        div[role="dialog"] div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            gap: 7px !important;
+            width: 100% !important;
+        }
+        div[role="dialog"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            flex: 1 1 0 !important;
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: none !important;
+        }
+        div[role="dialog"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]
+        div[data-testid="stButton"] button {
+            width: 100% !important;
+            min-height: 65px !important;
+            height: 65px !important;
             padding: 0 !important;
-            border-radius: 12px !important;
-            font-size: 32px !important;
+            border-radius: 10px !important;
+            font-size: 30px !important;
             font-weight: 750 !important;
             touch-action: manipulation;
         }
-        div[role="dialog"] div[data-testid="stHorizontalBlock"] {
-            gap: 8px !important;
-        }
-        /* Μικρότερα πλήκτρα ενεργειών κάτω από το αριθμητικό τετράγωνο. */
         div[role="dialog"] div[data-testid="stHorizontalBlock"]:last-of-type
         div[data-testid="stButton"] button {
-            font-size: 16px !important;
-            min-height: 52px !important;
-            height: 52px !important;
+            font-size: 15px !important;
+            min-height: 46px !important;
+            height: 46px !important;
         }
-        @media (max-width: 420px) {
-            div[role="dialog"] div[data-testid="stButton"] button {
-                min-height: 72px !important;
-                height: 72px !important;
+        @media (max-height: 700px) {
+            div[role="dialog"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]
+            div[data-testid="stButton"] button {
+                min-height: 53px !important;
+                height: 53px !important;
             }
         }
         </style>

@@ -1554,13 +1554,13 @@ if st.session_state.current_barcode:
         display: grid !important;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 6px !important;
-        width: min(270px, calc(100vw - 110px)) !important;
+        width: min(286px, calc(100vw - 100px)) !important;
         min-width: 0 !important;
-        max-width: min(270px, calc(100vw - 110px)) !important;
+        max-width: min(286px, calc(100vw - 100px)) !important;
         margin-left: auto !important;
         margin-right: auto !important;
         position: relative !important;
-        left: -8px !important;
+        left: 0 !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
     }
@@ -1584,7 +1584,7 @@ if st.session_state.current_barcode:
         min-height: 60px !important;
         padding: 0 !important;
         border-radius: 10px !important;
-        font-size: 36px !important;
+        font-size: 42px !important;
         font-weight: 900 !important;
         box-sizing: border-box !important;
         touch-action: manipulation;
@@ -1592,7 +1592,16 @@ if st.session_state.current_barcode:
     /* Το Streamlit βάζει το κείμενο του κουμπιού σε εσωτερικό <p>. */
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button p,
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button p {
-        font-size: 36px !important;
+        font-size: 42px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+    }
+    /* Ορατό κείμενο αριθμών: ο Streamlit συχνά το τυλίγει σε span/p. */
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button [data-testid="stMarkdownContainer"],
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button [data-testid="stMarkdownContainer"] *,
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button [data-testid="stMarkdownContainer"],
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button [data-testid="stMarkdownContainer"] * {
+        font-size: 42px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
     }

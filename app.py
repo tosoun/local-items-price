@@ -1521,18 +1521,77 @@ if st.session_state.current_barcode:
 
 
     # =====================================================
-    # PRICE
+    # PRICE — ΜΕΓΑΛΟ ΑΡΙΘΜΗΤΙΚΟ ΠΛΗΚΤΡΟΛΟΓΙΟ (iOS / ANDROID)
     # =====================================================
-    price = st.number_input(
-        "💶 Τιμή (€)",
-        min_value=0.00,
-        step=0.01,
-        format="%.2f",
-        key=(
-            f"price_"
-            f"{st.session_state.entry_counter}"
+    price_key = f"keypad_price_{st.session_state.entry_counter}_{barcode}"
+    if price_key not in st.session_state:
+        st.session_state[price_key] = ""
+
+    @st.dialog("💶 Καταχώρηση τιμής", width="large")
+    def price_keypad():
+        st.markdown("""
+        <style>
+        div[role="dialog"] div[data-testid="stButton"] button {
+            min-height: 64px !important;
+            font-size: 25px !important;
+            font-weight: 700 !important;
+            touch-action: manipulation;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        value = st.session_state[price_key]
+        st.markdown(
+            f"<div style='text-align:center;font-size:38px;font-weight:800;"
+            f"padding:12px 0'>{html.escape(value or '0')} €</div>",
+            unsafe_allow_html=True,
         )
-    )
+
+        for row_index, keys in enumerate((("1", "2", "3"), ("4", "5", "6"),
+                                          ("7", "8", "9"), (",", "0", "⌫"))):
+            cols = st.columns(3, gap="small")
+            for col, digit in zip(cols, keys):
+                with col:
+                    if st.button(digit, key=f"pad_{row_index}_{digit}", use_container_width=True):
+                        current = st.session_state[price_key]
+                        if digit == "⌫":
+                            current = current[:-1]
+                        elif digit == ",":
+                            if "," not in current:
+                                current = (current or "0") + ","
+                        elif len(current.replace(",", "")) < 9:
+                            if "," in current:
+                                cents = current.split(",", 1)[1]
+                                if len(cents) < 2:
+                                    current += digit
+                            else:
+                                current = digit if current == "0" else current + digit
+                        st.session_state[price_key] = current
+                        st.rerun(scope="fragment")
+
+        col_clear, col_cancel, col_ok = st.columns(3, gap="small")
+        with col_clear:
+            if st.button("C", use_container_width=True, key="pad_clear"):
+                st.session_state[price_key] = ""
+                st.rerun(scope="fragment")
+        with col_cancel:
+            if st.button("Άκυρο", use_container_width=True, key="pad_cancel"):
+                st.session_state[price_key] = ""
+                st.rerun()
+        with col_ok:
+            if st.button("ΟΚ ✓", type="primary", use_container_width=True, key="pad_ok"):
+                st.rerun()
+
+    st.markdown("**💶 Τιμή (€)**")
+    displayed_price = st.session_state[price_key]
+    if st.button(
+        f"{displayed_price or 'Πατήστε για εισαγωγή τιμής'} €",
+        key=f"open_price_keypad_{st.session_state.entry_counter}_{barcode}",
+        use_container_width=True,
+    ):
+        price_keypad()
+
+    price = float(displayed_price.replace(",", ".")) if displayed_price and displayed_price != "," else 0.0
 
 
     # =====================================================

@@ -1683,6 +1683,8 @@ if st.session_state.current_barcode:
     # =====================================================
     # SAVE
     # =====================================================
+    # Τα μηνύματα ελέγχου εμφανίζονται ΠΑΝΩ από το κουμπί αποθήκευσης.
+    save_message_area = st.empty()
     if st.button(
         "💾 Αποθήκευση τιμής",
         type="primary",
@@ -1693,14 +1695,14 @@ if st.session_state.current_barcode:
 
         if city == "— Επίλεξε πόλη —":
 
-            st.warning(
+            save_message_area.warning(
                 "⚠️ Επίλεξε πρώτα πόλη."
             )
 
 
         elif price <= 0:
 
-            st.warning(
+            save_message_area.warning(
                 "⚠️ Γράψε πρώτα την τιμή."
             )
 

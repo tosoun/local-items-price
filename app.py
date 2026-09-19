@@ -1527,15 +1527,39 @@ if st.session_state.current_barcode:
     if price_key not in st.session_state:
         st.session_state[price_key] = ""
 
-    @st.dialog("💶 Καταχώρηση τιμής", width="large")
+    @st.dialog("💶 Καταχώρηση τιμής", width="small")
     def price_keypad():
+        # Τετράγωνο αριθμητικό πληκτρολόγιο, διάταξη τηλεφώνου.
         st.markdown("""
         <style>
+        div[role="dialog"] {
+            width: min(96vw, 390px) !important;
+            max-width: 390px !important;
+        }
         div[role="dialog"] div[data-testid="stButton"] button {
-            min-height: 64px !important;
-            font-size: 25px !important;
-            font-weight: 700 !important;
+            min-height: 78px !important;
+            height: 78px !important;
+            padding: 0 !important;
+            border-radius: 12px !important;
+            font-size: 32px !important;
+            font-weight: 750 !important;
             touch-action: manipulation;
+        }
+        div[role="dialog"] div[data-testid="stHorizontalBlock"] {
+            gap: 8px !important;
+        }
+        /* Μικρότερα πλήκτρα ενεργειών κάτω από το αριθμητικό τετράγωνο. */
+        div[role="dialog"] div[data-testid="stHorizontalBlock"]:last-of-type
+        div[data-testid="stButton"] button {
+            font-size: 16px !important;
+            min-height: 52px !important;
+            height: 52px !important;
+        }
+        @media (max-width: 420px) {
+            div[role="dialog"] div[data-testid="stButton"] button {
+                min-height: 72px !important;
+                height: 72px !important;
+            }
         }
         </style>
         """, unsafe_allow_html=True)

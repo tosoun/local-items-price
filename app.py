@@ -1527,58 +1527,58 @@ if st.session_state.current_barcode:
     if price_key not in st.session_state:
         st.session_state[price_key] = ""
 
+    # Το dialog αποδίδεται σε portal: οι κανόνες τοποθετούνται στο
+    # κεντρικό CSS της εφαρμογής, όχι μόνο μέσα στο περιεχόμενο του dialog.
+    st.markdown("""
+    <style>
+    [data-testid="stDialog"]:has(.price-keypad-marker),
+    [role="dialog"]:has(.price-keypad-marker) {
+        width: min(94vw, 390px) !important;
+        max-width: 390px !important;
+        max-height: 94dvh !important;
+    }
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"],
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+        width: 100% !important;
+    }
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: none !important;
+        margin: 0 !important;
+    }
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button,
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button {
+        width: 100% !important;
+        min-height: 60px !important;
+        height: 60px !important;
+        padding: 0 !important;
+        border-radius: 10px !important;
+        font-size: 29px !important;
+        font-weight: 750 !important;
+        touch-action: manipulation;
+    }
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button,
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button {
+        font-size: 16px !important;
+        min-height: 48px !important;
+        height: 48px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     @st.dialog("💶 Καταχώρηση τιμής", width="small")
     def price_keypad():
-        # Τετράγωνο αριθμητικό πληκτρολόγιο, διάταξη τηλεφώνου.
-        st.markdown("""
-        <style>
-        /* Το Streamlit στοιβάζει τις στήλες στο κινητό. Εδώ τις
-           κρατάμε υποχρεωτικά σε τριάδες, μόνο μέσα στο παράθυρο τιμής. */
-        div[role="dialog"] {
-            width: min(94vw, 390px) !important;
-            max-width: 390px !important;
-            max-height: 94dvh !important;
-        }
-        div[role="dialog"] div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: stretch !important;
-            gap: 7px !important;
-            width: 100% !important;
-        }
-        div[role="dialog"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
-            flex: 1 1 0 !important;
-            width: 0 !important;
-            min-width: 0 !important;
-            max-width: none !important;
-        }
-        div[role="dialog"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]
-        div[data-testid="stButton"] button {
-            width: 100% !important;
-            min-height: 65px !important;
-            height: 65px !important;
-            padding: 0 !important;
-            border-radius: 10px !important;
-            font-size: 30px !important;
-            font-weight: 750 !important;
-            touch-action: manipulation;
-        }
-        div[role="dialog"] div[data-testid="stHorizontalBlock"]:last-of-type
-        div[data-testid="stButton"] button {
-            font-size: 15px !important;
-            min-height: 46px !important;
-            height: 46px !important;
-        }
-        @media (max-height: 700px) {
-            div[role="dialog"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]
-            div[data-testid="stButton"] button {
-                min-height: 53px !important;
-                height: 53px !important;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
+        # Σταθερό πλέγμα: στο κινητό οι στήλες του Streamlit ΔΕΝ
+        # επιτρέπεται να γίνουν κατακόρυφες. Το CSS μπαίνει και στο
+        # κύριο έγγραφο παρακάτω, πριν ανοίξει το dialog.
+        st.markdown('<span class="price-keypad-marker" style="display:none"></span>',
+                    unsafe_allow_html=True)
 
         value = st.session_state[price_key]
         st.markdown(

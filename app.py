@@ -1527,52 +1527,41 @@ if st.session_state.current_barcode:
     if price_key not in st.session_state:
         st.session_state[price_key] = ""
 
-    # Περιορισμός του πραγματικού πλάτους του dialog ΚΑΙ των εσωτερικών
-    # Streamlit wrappers. Οι στήλες δεν πρέπει να διατηρούν ελάχιστο πλάτος.
+    # Σταθερό, στενό πλάτος για ΚΑΘΕ σειρά πλήκτρων. Το Streamlit
+    # κρατά συχνά desktop min-width στους ενδιάμεσους wrappers.
+    # Αντί να βασιζόμαστε στο 100% τους, περιορίζουμε την ίδια τη σειρά.
     st.markdown("""
     <style>
     [role="dialog"]:has(.price-keypad-marker),
     [data-testid="stDialog"]:has(.price-keypad-marker) {
-        width: min(360px, calc(100vw - 32px)) !important;
+        width: min(360px, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
         min-width: 0 !important;
-        max-width: calc(100vw - 32px) !important;
         box-sizing: border-box !important;
         overflow-x: hidden !important;
         max-height: 92dvh !important;
     }
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stDialogContent"],
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stDialogContent"] {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
         padding-left: 12px !important;
         padding-right: 12px !important;
         box-sizing: border-box !important;
         overflow-x: hidden !important;
     }
-    /* Τα ενδιάμεσα wrappers συχνά κρατούν το πλάτος της desktop διάταξης. */
-    [role="dialog"]:has(.price-keypad-marker) [data-testid="stVerticalBlock"],
-    [role="dialog"]:has(.price-keypad-marker) [data-testid="stElementContainer"],
-    [role="dialog"]:has(.price-keypad-marker) [data-testid="stLayoutWrapper"],
-    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stVerticalBlock"],
-    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stElementContainer"],
-    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stLayoutWrapper"] {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
+    /* Πλάτος της ίδιας της σειράς, ανεξάρτητα από το πλάτος του wrapper. */
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"],
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] {
         display: grid !important;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 6px !important;
-        width: 100% !important;
+        width: min(270px, calc(100vw - 110px)) !important;
         min-width: 0 !important;
-        max-width: 100% !important;
+        max-width: min(270px, calc(100vw - 110px)) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
         box-sizing: border-box !important;
+        overflow: hidden !important;
     }
-    /* Στο Streamlit το stColumn μπορεί να είναι div χωρίς data-testid. */
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] > *,
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] > * {
         width: 100% !important;
@@ -1585,14 +1574,15 @@ if st.session_state.current_barcode:
     }
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button,
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button {
+        display: block !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100% !important;
-        height: 58px !important;
-        min-height: 58px !important;
+        height: 60px !important;
+        min-height: 60px !important;
         padding: 0 !important;
         border-radius: 10px !important;
-        font-size: 26px !important;
+        font-size: 27px !important;
         font-weight: 700 !important;
         box-sizing: border-box !important;
         touch-action: manipulation;

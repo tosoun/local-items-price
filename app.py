@@ -1559,6 +1559,8 @@ if st.session_state.current_barcode:
         max-width: min(270px, calc(100vw - 110px)) !important;
         margin-left: auto !important;
         margin-right: auto !important;
+        position: relative !important;
+        left: -8px !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
     }
@@ -1582,14 +1584,26 @@ if st.session_state.current_barcode:
         min-height: 60px !important;
         padding: 0 !important;
         border-radius: 10px !important;
-        font-size: 27px !important;
-        font-weight: 700 !important;
+        font-size: 36px !important;
+        font-weight: 900 !important;
         box-sizing: border-box !important;
         touch-action: manipulation;
+    }
+    /* Το Streamlit βάζει το κείμενο του κουμπιού σε εσωτερικό <p>. */
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button p,
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button p {
+        font-size: 36px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
     }
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button,
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button {
         font-size: 15px !important;
+    }
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button p,
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button p {
+        font-size: 15px !important;
+        font-weight: 700 !important;
     }
     </style>
     """, unsafe_allow_html=True)

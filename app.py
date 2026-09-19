@@ -1531,11 +1531,30 @@ if st.session_state.current_barcode:
     # κεντρικό CSS της εφαρμογής, όχι μόνο μέσα στο περιεχόμενο του dialog.
     st.markdown("""
     <style>
+    /* Το παράθυρο και όλο το εσωτερικό του χωρούν στο πλάτος κινητού. */
     [data-testid="stDialog"]:has(.price-keypad-marker),
     [role="dialog"]:has(.price-keypad-marker) {
-        width: min(94vw, 390px) !important;
-        max-width: 390px !important;
-        max-height: 94dvh !important;
+        width: min(calc(100vw - 28px), 390px) !important;
+        max-width: calc(100vw - 28px) !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        max-height: 92dvh !important;
+    }
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stDialogContent"],
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stDialogContent"] {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stVerticalBlock"],
+    [role="dialog"]:has(.price-keypad-marker) [data-testid="stElementContainer"],
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stVerticalBlock"],
+    [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stElementContainer"] {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"],
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] {
@@ -1543,6 +1562,10 @@ if st.session_state.current_barcode:
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 7px !important;
         width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
@@ -1551,10 +1574,14 @@ if st.session_state.current_barcode:
         max-width: 100% !important;
         flex: none !important;
         margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
     }
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button,
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"] button {
         width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
         min-height: 60px !important;
         height: 60px !important;
         padding: 0 !important;
@@ -1562,10 +1589,11 @@ if st.session_state.current_barcode:
         font-size: 29px !important;
         font-weight: 750 !important;
         touch-action: manipulation;
+        box-sizing: border-box !important;
     }
     [data-testid="stDialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button,
     [role="dialog"]:has(.price-keypad-marker) [data-testid="stHorizontalBlock"]:last-of-type button {
-        font-size: 16px !important;
+        font-size: 15px !important;
         min-height: 48px !important;
         height: 48px !important;
     }

@@ -508,6 +508,23 @@ if st.session_state.preview_mode:
             hide_index=True
         )
 
+        # Καθαρό κείμενο για αντιγραφή/επικόλληση σε Excel, email, Notes κ.λπ.
+        # Χρησιμοποιούμε tab ανάμεσα στις στήλες και νέα γραμμή ανά εγγραφή,
+        # ώστε το paste να δίνει τις πραγματικές τιμές και όχι HTML/κώδικα.
+        copy_text = preview_df.fillna("").astype(str).to_csv(
+            sep="\t",
+            index=False,
+            lineterminator="\n"
+        )
+
+        st.text_area(
+            "📋 Αντιγραφή στοιχείων",
+            value=copy_text,
+            height=130,
+            help="Πάτησε μέσα στο πλαίσιο, επίλεξε το κείμενο και κάνε Αντιγραφή.",
+            key="preview_copy_text"
+        )
+
         preview_output = BytesIO()
 
         with pd.ExcelWriter(

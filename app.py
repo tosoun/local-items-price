@@ -1800,25 +1800,40 @@ if st.session_state.current_barcode:
 
     st.markdown("**💶 Τιμή (€)**")
     displayed_price = st.session_state[price_key]
-    # Διατήρηση των δύο κουμπιών στην ίδια σειρά και σε κάθετο κινητό.
+    # Στόχευση της συγκεκριμένης σειράς μέσω marker ΜΕΣΑ στην πρώτη στήλη.
+    # Το Streamlit στοιβάζει τις στήλες στο κινητό με media rules·
+    # υπερισχύουμε αυτών μόνο για τα δύο κουμπιά τιμής/διαγραφής.
     st.markdown("""<style>
-    @media (max-width: 640px) {
-      [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] .price-action-row-marker)
-      > [data-testid="stHorizontalBlock"] {
-        flex-wrap: nowrap !important;
+    @media (max-width: 768px) {
+      div[data-testid="stHorizontalBlock"]:has(.price-action-row-marker) {
+        display: flex !important;
         flex-direction: row !important;
-        gap: 0.4rem !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        width: 100% !important;
       }
-      [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] .price-action-row-marker)
-      > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
-        width: calc(50% - 0.2rem) !important;
+      div[data-testid="stHorizontalBlock"]:has(.price-action-row-marker)
+      > div[data-testid="stColumn"] {
+        flex: 1 1 0% !important;
+        width: 0 !important;
         min-width: 0 !important;
-        flex: 1 1 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+      }
+      div[data-testid="stHorizontalBlock"]:has(.price-action-row-marker) button {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 3px !important;
+        padding-right: 3px !important;
+        font-size: clamp(11px, 3.1vw, 15px) !important;
+        white-space: normal !important;
       }
     }
-    </style><span class="price-action-row-marker" style="display:none"></span>""", unsafe_allow_html=True)
-    col_price_entry, col_discard_scan = st.columns(2, gap="small", vertical_alignment="center", border=False)
+    </style>""", unsafe_allow_html=True)
+    col_price_entry, col_discard_scan = st.columns([1, 1], gap="small")
     with col_price_entry:
+        st.markdown('<span class="price-action-row-marker" style="display:none"></span>', unsafe_allow_html=True)
         if st.button(
             f"{displayed_price or 'Εισαγωγή τιμής'} €",
             key=f"open_price_keypad_{st.session_state.entry_counter}_{barcode}",

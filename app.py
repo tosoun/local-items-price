@@ -519,10 +519,36 @@ if st.session_state.preview_mode:
             preview_df.to_excel(
                 writer,
                 index=False,
-                sheet_name="Τιμές"
+                sheet_name="Τιμές",
+                startrow=3
             )
 
             worksheet = writer.sheets["Τιμές"]
+
+            # Επικεφαλίδα αναφοράς πάνω από τον πίνακα.
+            from openpyxl.styles import Alignment, PatternFill, Font
+            from openpyxl.utils import get_column_letter
+            last_column = max(1, len(preview_df.columns))
+            last_letter = get_column_letter(last_column)
+            worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=last_column)
+            worksheet.merge_cells(start_row=2, start_column=1, end_row=2, end_column=last_column)
+            worksheet["A1"] = "ΠΑΡΑΚΟΛΟΥΘΗΣΗ ΤΙΜΩΝ ΤΟΠΙΚΩΝ ΠΡΟΪΟΝΤΩΝ"
+            worksheet["A2"] = "Σύγκριση τιμών ανά προϊόν, πόλη και αλυσίδα σούπερ μάρκετ"
+            for row_number, font_size, bold in ((1, 16, True), (2, 11, False)):
+                for row_cells in worksheet.iter_rows(min_row=row_number, max_row=row_number, min_col=1, max_col=last_column):
+                    for cell in row_cells:
+                        cell.fill = PatternFill(fill_type="solid", fgColor="17365D")
+                title_cell = worksheet.cell(row=row_number, column=1)
+                title_cell.font = Font(name="Calibri", size=font_size, bold=bold, color="FFFFFF")
+                title_cell.alignment = Alignment(horizontal="center", vertical="center")
+            worksheet.row_dimensions[1].height = 34
+            worksheet.row_dimensions[2].height = 25
+            worksheet.row_dimensions[3].height = 9
+            for cell in worksheet[4]:
+                cell.fill = PatternFill(fill_type="solid", fgColor="DCE6F1")
+                cell.font = Font(bold=True, color="17365D")
+                cell.alignment = Alignment(vertical="center")
+            worksheet.row_dimensions[4].height = 24
 
             # Χαμηλότερη καταγεγραμμένη τιμή ανά προϊόν και πόλη,
             # μεταξύ των γραμμών που περιλαμβάνονται στην εξαγωγή.
@@ -559,16 +585,16 @@ if st.session_state.preview_mode:
                 red_fill = PatternFill(fill_type="solid", fgColor="FFC7CE")
                 red_font = Font(bold=True, color="9C0006")
                 for row_index in best_rows:
-                    cell = worksheet.cell(row=int(row_index) + 2, column=price_column)
+                    cell = worksheet.cell(row=int(row_index) + 5, column=price_column)
                     cell.fill = green_fill
                     cell.font = green_font
                 for row_index in worst_rows:
-                    cell = worksheet.cell(row=int(row_index) + 2, column=price_column)
+                    cell = worksheet.cell(row=int(row_index) + 5, column=price_column)
                     cell.fill = red_fill
                     cell.font = red_font
 
-            worksheet.freeze_panes = "A2"
-            worksheet.auto_filter.ref = worksheet.dimensions
+            worksheet.freeze_panes = "A5"
+            worksheet.auto_filter.ref = f"A4:{last_letter}{worksheet.max_row}"
 
             for column_cells in worksheet.columns:
 

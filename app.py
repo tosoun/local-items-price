@@ -1263,6 +1263,33 @@ if page == "🗄️ Database":
 
 
             # =================================================
+            # ΤΑΞΙΝΟΜΗΣΗ ΕΞΑΓΩΓΗΣ ΓΙΑ ΕΥΚΟΛΗ ΣΥΓΚΡΙΣΗ
+            # Πόλη -> Προϊόν -> Μασούτης πρώτος -> Ανταγωνιστές
+            # =================================================
+            if not export_df.empty:
+                export_df = export_df.copy()
+                export_df["__market_order"] = (
+                    export_df["Market"]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                    .str.casefold()
+                    .ne("μασούτης".casefold())
+                    .astype(int)
+                )
+
+                export_df = (
+                    export_df
+                    .sort_values(
+                        by=["Πόλη", "Προϊόν", "__market_order", "Market"],
+                        kind="stable",
+                        na_position="last"
+                    )
+                    .drop(columns=["__market_order"])
+                    .reset_index(drop=True)
+                )
+
+            # =================================================
             # PREVIEW
             # =================================================
             if st.button(

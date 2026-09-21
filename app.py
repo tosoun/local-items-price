@@ -616,22 +616,25 @@ if st.session_state.preview_mode:
                 legend_title.alignment = Alignment(horizontal="center")
                 worksheet.merge_cells(start_row=4, start_column=legend_col, end_row=4, end_column=legend_col + 1)
 
+                # Στρογγυλές ενδείξεις χρώματος (●), όπως φωτεινή ένδειξη.
                 legend_items = [
-                    (5, green_fill, "Μασούτης φθηνότερος"),
-                    (6, blue_fill, "Ίδια τιμή με ανταγωνιστή"),
-                    (7, red_fill, "Μασούτης ακριβότερος"),
+                    (5, "00B050", "Μασούτης φθηνότερος"),
+                    (6, "4472C4", "Ίδια τιμή με ανταγωνιστή"),
+                    (7, "E63946", "Μασούτης ακριβότερος"),
                 ]
-                thin = Side(style="thin", color="B7C3D0")
-                for r, fill, label in legend_items:
+                for r, color, label in legend_items:
                     color_cell = worksheet.cell(row=r, column=legend_col)
-                    color_cell.value = ""
-                    color_cell.fill = fill
-                    color_cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+                    color_cell.value = "●"
+                    color_cell.font = Font(name="Arial", size=20, bold=True, color=color)
+                    color_cell.alignment = Alignment(horizontal="center", vertical="center")
+
                     text_cell = worksheet.cell(row=r, column=legend_col + 1)
                     text_cell.value = label
-                    text_cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+                    text_cell.alignment = Alignment(vertical="center")
 
-                worksheet.column_dimensions[get_column_letter(legend_col)].width = 5
+                    worksheet.row_dimensions[r].height = 23
+
+                worksheet.column_dimensions[get_column_letter(legend_col)].width = 4
                 worksheet.column_dimensions[get_column_letter(legend_col + 1)].width = 29
 
             worksheet.freeze_panes = "A5"

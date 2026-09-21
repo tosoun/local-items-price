@@ -524,6 +524,38 @@ if st.session_state.preview_mode:
 
             worksheet = writer.sheets["Τιμές"]
 
+            # Χαμηλότερη καταγεγραμμένη τιμή ανά προϊόν και πόλη,
+            # μεταξύ των γραμμών που περιλαμβάνονται στην εξαγωγή.
+            # Ισοπαλίες επισημαίνονται όλες. Κενές/μη αριθμητικές τιμές αγνοούνται.
+            from openpyxl.styles import PatternFill, Font
+
+            required = {"Προϊόν", "Πόλη", "Τιμή (€)"}
+            if required.issubset(preview_df.columns):
+                price_numbers = pd.to_numeric(preview_df["Τιμή (€)"], errors="coerce")
+                comparison = pd.DataFrame({
+                    "product": preview_df["Προϊόν"].fillna("").astype(str).str.strip(),
+                    "city": preview_df["Πόλη"].fillna("").astype(str).str.strip(),
+                    "price": price_numbers,
+                })
+                valid = (
+                    comparison["product"].ne("")
+                    & comparison["city"].ne("")
+                    & comparison["price"].notna()
+                )
+                minimum = comparison.loc[valid].groupby(
+                    ["product", "city"]
+                )["price"].transform("min")
+                best_rows = comparison.loc[valid].index[
+                    comparison.loc[valid, "price"].eq(minimum)
+                ]
+                price_column = preview_df.columns.get_loc("Τιμή (€)") + 1
+                green_fill = PatternFill(fill_type="solid", fgColor="C6EFCE")
+                green_font = Font(bold=True, color="006100")
+                for row_index in best_rows:
+                    cell = worksheet.cell(row=int(row_index) + 2, column=price_column)
+                    cell.fill = green_fill
+                    cell.font = green_font
+
             worksheet.freeze_panes = "A2"
             worksheet.auto_filter.ref = worksheet.dimensions
 

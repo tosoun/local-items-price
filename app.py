@@ -1821,6 +1821,14 @@ if st.session_state.current_barcode:
         max-width: none !important;
         margin: 0 !important;
       }
+      /* Ο κρυφός marker δεν πρέπει να προσθέτει ύψος στην πρώτη στήλη. */
+      div[data-testid="stHorizontalBlock"]:has(.price-action-row-marker)
+      div[data-testid="stElementContainer"]:has(.price-action-row-marker) {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
       div[data-testid="stHorizontalBlock"]:has(.price-action-row-marker) button {
         width: 100% !important;
         min-width: 0 !important;

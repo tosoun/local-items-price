@@ -14,7 +14,7 @@ from supabase import create_client
 # ΡΥΘΜΙΣΕΙΣ ΣΕΛΙΔΑΣ
 # =========================================================
 st.set_page_config(
-    page_title="Καταγραφή Τιμών",
+    page_title="Local Price Tracker",
     page_icon="📱",
     layout="centered"
 )
@@ -198,6 +198,10 @@ div[data-testid="stRadio"] label {
 """,
     unsafe_allow_html=True
 )
+
+# ΤΙΤΛΟΣ ΕΦΑΡΜΟΓΗΣ
+st.markdown("# 📍 Local Price Tracker")
+st.caption("Παρακολούθηση Τιμών Τοπικών Προϊόντων")
 
 
 # =========================================================

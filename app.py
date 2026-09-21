@@ -677,7 +677,7 @@ if st.session_state.preview_mode:
 
         file_name = (
             "times_"
-            + datetime.now().strftime("%d-%m-%Y_%H-%M")
+            + datetime.now(ZoneInfo("Europe/Athens")).strftime("%d-%m-%Y_%H-%M")
             + ".xlsx"
         )
 

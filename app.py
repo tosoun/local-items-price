@@ -200,8 +200,43 @@ div[data-testid="stRadio"] label {
 )
 
 # ΤΙΤΛΟΣ ΕΦΑΡΜΟΓΗΣ
-st.markdown("# 📍 Local Price Tracker")
-st.caption("Παρακολούθηση Τιμών Τοπικών Προϊόντων")
+st.markdown(
+    """
+    <div class="local-price-banner">
+        <div class="local-price-banner-title">📍 Local Price Tracker</div>
+        <div class="local-price-banner-subtitle">Παρακολούθηση Τιμών Τοπικών Προϊόντων</div>
+    </div>
+    <style>
+    .local-price-banner {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 14px;
+        margin: 2px 0 8px 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #16283d 0%, #284d70 100%);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.14);
+    }
+    .local-price-banner-title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 750;
+        line-height: 1.15;
+        letter-spacing: 0.1px;
+    }
+    .local-price-banner-subtitle {
+        margin-top: 4px;
+        color: #dbe7f2;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: 0.15px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # =========================================================

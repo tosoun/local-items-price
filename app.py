@@ -599,7 +599,7 @@ if st.session_state.preview_mode:
             for column_cells in worksheet.columns:
 
                 max_length = 0
-                column_letter = column_cells[0].column_letter
+                column_letter = get_column_letter(column_cells[0].column)
 
                 for cell in column_cells:
 

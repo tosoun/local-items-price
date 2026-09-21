@@ -1800,12 +1800,29 @@ if st.session_state.current_barcode:
 
     st.markdown("**💶 Τιμή (€)**")
     displayed_price = st.session_state[price_key]
-    if st.button(
-        f"{displayed_price or 'Πατήστε για εισαγωγή τιμής'} €",
-        key=f"open_price_keypad_{st.session_state.entry_counter}_{barcode}",
-        use_container_width=True,
-    ):
-        price_keypad()
+    col_price_entry, col_discard_scan = st.columns(2, gap="small")
+    with col_price_entry:
+        if st.button(
+            f"{displayed_price or 'Εισαγωγή τιμής'} €",
+            key=f"open_price_keypad_{st.session_state.entry_counter}_{barcode}",
+            use_container_width=True,
+        ):
+            price_keypad()
+    with col_discard_scan:
+        if st.button(
+            "🗑️ Διαγραφή",
+            key=f"discard_scan_{st.session_state.entry_counter}_{barcode}",
+            use_container_width=True,
+        ):
+            # Ακύρωση μόνο της τρέχουσας επιλογής, χωρίς διαγραφή από τη βάση.
+            st.session_state.current_barcode = None
+            st.session_state.manual_matches = []
+            st.session_state.manual_search_message = ""
+            st.session_state.scanner_message = ""
+            st.session_state[price_key] = ""
+            st.session_state.entry_counter += 1
+            st.session_state.reset_token += 1
+            st.rerun()
 
     price = float(displayed_price.replace(",", ".")) if displayed_price and displayed_price != "," else 0.0
 

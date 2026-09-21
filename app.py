@@ -1800,7 +1800,24 @@ if st.session_state.current_barcode:
 
     st.markdown("**💶 Τιμή (€)**")
     displayed_price = st.session_state[price_key]
-    col_price_entry, col_discard_scan = st.columns(2, gap="small")
+    # Διατήρηση των δύο κουμπιών στην ίδια σειρά και σε κάθετο κινητό.
+    st.markdown("""<style>
+    @media (max-width: 640px) {
+      [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] .price-action-row-marker)
+      > [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        flex-direction: row !important;
+        gap: 0.4rem !important;
+      }
+      [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] .price-action-row-marker)
+      > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: calc(50% - 0.2rem) !important;
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+      }
+    }
+    </style><span class="price-action-row-marker" style="display:none"></span>""", unsafe_allow_html=True)
+    col_price_entry, col_discard_scan = st.columns(2, gap="small", vertical_alignment="center", border=False)
     with col_price_entry:
         if st.button(
             f"{displayed_price or 'Εισαγωγή τιμής'} €",

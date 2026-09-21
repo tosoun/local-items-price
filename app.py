@@ -596,30 +596,32 @@ if st.session_state.preview_mode:
             worksheet.freeze_panes = "A5"
             worksheet.auto_filter.ref = f"A4:{last_letter}{worksheet.max_row}"
 
-            for column_cells in worksheet.columns:
+            # Αυτόματο πλάτος από τις πραγματικές τιμές του πίνακα μόνο.
+            # Εξαιρούνται οι συγχωνευμένες επικεφαλίδες A1:G2, ώστε
+            # ο μεγάλος τίτλος να μην ανοίγει υπερβολικά τη στήλη A.
+            # Δεν υπάρχει ανώτατο όριο 45 χαρακτήρων: οι περιγραφές
+            # προϊόντων εμφανίζονται ολόκληρες.
+            from openpyxl.cell.cell import MergedCell
+            from openpyxl.utils import get_column_letter
+            from openpyxl.styles.numbers import is_date_format
+            from datetime import date, datetime
 
+            for column_index in range(1, last_column + 1):
                 max_length = 0
-                column_letter = get_column_letter(column_cells[0].column)
+                for row_index in range(4, worksheet.max_row + 1):
+                    cell = worksheet.cell(row=row_index, column=column_index)
+                    if isinstance(cell, MergedCell) or cell.value is None:
+                        continue
+                    if isinstance(cell.value, (date, datetime)):
+                        displayed = cell.value.strftime("%d/%m/%Y")
+                    elif isinstance(cell.value, (int, float)) and cell.number_format != "General":
+                        displayed = str(cell.value)
+                    else:
+                        displayed = str(cell.value)
+                    max_length = max(max_length, len(displayed))
 
-                for cell in column_cells:
-
-                    value = (
-                        ""
-                        if cell.value is None
-                        else str(cell.value)
-                    )
-
-                    max_length = max(
-                        max_length,
-                        len(value)
-                    )
-
-                worksheet.column_dimensions[
-                    column_letter
-                ].width = min(
-                    max(max_length + 2, 10),
-                    45
-                )
+                column_letter = get_column_letter(column_index)
+                worksheet.column_dimensions[column_letter].width = max(8, max_length + 2)
 
         preview_output.seek(0)
 

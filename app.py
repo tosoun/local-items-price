@@ -203,7 +203,7 @@ div[data-testid="stRadio"] label {
 st.markdown(
     """
     <div class="local-price-banner">
-        <div class="local-price-banner-title">📍 Local Price Tracker</div>
+        <div class="local-price-banner-title">Local Price Tracker</div>
         <div class="local-price-banner-subtitle">Παρακολούθηση Τιμών Τοπικών Προϊόντων</div>
     </div>
     <style>

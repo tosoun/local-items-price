@@ -550,48 +550,89 @@ if st.session_state.preview_mode:
                 cell.alignment = Alignment(vertical="center")
             worksheet.row_dimensions[4].height = 24
 
-            # Χαμηλότερη καταγεγραμμένη τιμή ανά προϊόν και πόλη,
-            # μεταξύ των γραμμών που περιλαμβάνονται στην εξαγωγή.
-            # Ισοπαλίες επισημαίνονται όλες. Κενές/μη αριθμητικές τιμές αγνοούνται.
-            from openpyxl.styles import PatternFill, Font
+            # Σύγκριση τιμής Μασούτη με τη χαμηλότερη τιμή ανταγωνιστή
+            # για το ίδιο προϊόν και την ίδια πόλη.
+            # Πράσινο = Μασούτης φθηνότερος, Μπλε = ίδια τιμή, Κόκκινο = ακριβότερος.
+            from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
-            required = {"Προϊόν", "Πόλη", "Τιμή (€)"}
+            required = {"Προϊόν", "Πόλη", "Market", "Τιμή (€)"}
             if required.issubset(preview_df.columns):
                 price_numbers = pd.to_numeric(preview_df["Τιμή (€)"], errors="coerce")
                 comparison = pd.DataFrame({
                     "product": preview_df["Προϊόν"].fillna("").astype(str).str.strip(),
                     "city": preview_df["Πόλη"].fillna("").astype(str).str.strip(),
+                    "market": preview_df["Market"].fillna("").astype(str).str.strip(),
                     "price": price_numbers,
                 })
+
+                green_fill = PatternFill(fill_type="solid", fgColor="C6EFCE")
+                green_font = Font(bold=True, color="006100")
+                blue_fill = PatternFill(fill_type="solid", fgColor="BDD7EE")
+                blue_font = Font(bold=True, color="1F4E78")
+                red_fill = PatternFill(fill_type="solid", fgColor="FFC7CE")
+                red_font = Font(bold=True, color="9C0006")
+                price_column = preview_df.columns.get_loc("Τιμή (€)") + 1
+
                 valid = (
                     comparison["product"].ne("")
                     & comparison["city"].ne("")
                     & comparison["price"].notna()
                 )
-                groups = comparison.loc[valid].groupby(["product", "city"])["price"]
-                minimum = groups.transform("min")
-                maximum = groups.transform("max")
-                best_rows = comparison.loc[valid].index[
-                    comparison.loc[valid, "price"].eq(minimum)
-                ]
-                # Κόκκινο μόνο όταν υπάρχει πραγματική διαφορά τιμής:
-                # σε ισοπαλία όλων των τιμών παραμένει η πράσινη επισήμανση.
-                worst_rows = comparison.loc[valid].index[
-                    comparison.loc[valid, "price"].eq(maximum) & maximum.gt(minimum)
-                ]
-                price_column = preview_df.columns.get_loc("Τιμή (€)") + 1
-                green_fill = PatternFill(fill_type="solid", fgColor="C6EFCE")
-                green_font = Font(bold=True, color="006100")
-                red_fill = PatternFill(fill_type="solid", fgColor="FFC7CE")
-                red_font = Font(bold=True, color="9C0006")
-                for row_index in best_rows:
+                valid_df = comparison.loc[valid].copy()
+
+                for row_index, row in valid_df.iterrows():
+                    if row["market"].casefold() != "μασούτης".casefold():
+                        continue
+
+                    competitors = valid_df[
+                        (valid_df["product"] == row["product"])
+                        & (valid_df["city"] == row["city"])
+                        & (valid_df["market"].str.casefold() != "μασούτης".casefold())
+                    ]["price"]
+
+                    # Χωρίς τιμή ανταγωνιστή δεν εφαρμόζεται χρώμα.
+                    if competitors.empty:
+                        continue
+
+                    competitor_best = competitors.min()
                     cell = worksheet.cell(row=int(row_index) + 5, column=price_column)
-                    cell.fill = green_fill
-                    cell.font = green_font
-                for row_index in worst_rows:
-                    cell = worksheet.cell(row=int(row_index) + 5, column=price_column)
-                    cell.fill = red_fill
-                    cell.font = red_font
+
+                    if row["price"] < competitor_best:
+                        cell.fill = green_fill
+                        cell.font = green_font
+                    elif row["price"] == competitor_best:
+                        cell.fill = blue_fill
+                        cell.font = blue_font
+                    else:
+                        cell.fill = red_fill
+                        cell.font = red_font
+
+                # Υπόμνημα χρωμάτων δεξιά από τον πίνακα.
+                legend_col = last_column + 2
+                legend_title = worksheet.cell(row=4, column=legend_col)
+                legend_title.value = "ΥΠΟΜΝΗΜΑ ΣΥΓΚΡΙΣΗΣ ΜΑΣΟΥΤΗ"
+                legend_title.fill = PatternFill(fill_type="solid", fgColor="17365D")
+                legend_title.font = Font(bold=True, color="FFFFFF")
+                legend_title.alignment = Alignment(horizontal="center")
+                worksheet.merge_cells(start_row=4, start_column=legend_col, end_row=4, end_column=legend_col + 1)
+
+                legend_items = [
+                    (5, green_fill, "Μασούτης φθηνότερος"),
+                    (6, blue_fill, "Ίδια τιμή με ανταγωνιστή"),
+                    (7, red_fill, "Μασούτης ακριβότερος"),
+                ]
+                thin = Side(style="thin", color="B7C3D0")
+                for r, fill, label in legend_items:
+                    color_cell = worksheet.cell(row=r, column=legend_col)
+                    color_cell.value = ""
+                    color_cell.fill = fill
+                    color_cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+                    text_cell = worksheet.cell(row=r, column=legend_col + 1)
+                    text_cell.value = label
+                    text_cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+                worksheet.column_dimensions[get_column_letter(legend_col)].width = 5
+                worksheet.column_dimensions[get_column_letter(legend_col + 1)].width = 29
 
             worksheet.freeze_panes = "A5"
             worksheet.auto_filter.ref = f"A4:{last_letter}{worksheet.max_row}"

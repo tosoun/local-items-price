@@ -542,19 +542,30 @@ if st.session_state.preview_mode:
                     & comparison["city"].ne("")
                     & comparison["price"].notna()
                 )
-                minimum = comparison.loc[valid].groupby(
-                    ["product", "city"]
-                )["price"].transform("min")
+                groups = comparison.loc[valid].groupby(["product", "city"])["price"]
+                minimum = groups.transform("min")
+                maximum = groups.transform("max")
                 best_rows = comparison.loc[valid].index[
                     comparison.loc[valid, "price"].eq(minimum)
+                ]
+                # Κόκκινο μόνο όταν υπάρχει πραγματική διαφορά τιμής:
+                # σε ισοπαλία όλων των τιμών παραμένει η πράσινη επισήμανση.
+                worst_rows = comparison.loc[valid].index[
+                    comparison.loc[valid, "price"].eq(maximum) & maximum.gt(minimum)
                 ]
                 price_column = preview_df.columns.get_loc("Τιμή (€)") + 1
                 green_fill = PatternFill(fill_type="solid", fgColor="C6EFCE")
                 green_font = Font(bold=True, color="006100")
+                red_fill = PatternFill(fill_type="solid", fgColor="FFC7CE")
+                red_font = Font(bold=True, color="9C0006")
                 for row_index in best_rows:
                     cell = worksheet.cell(row=int(row_index) + 2, column=price_column)
                     cell.fill = green_fill
                     cell.font = green_font
+                for row_index in worst_rows:
+                    cell = worksheet.cell(row=int(row_index) + 2, column=price_column)
+                    cell.fill = red_fill
+                    cell.font = red_font
 
             worksheet.freeze_panes = "A2"
             worksheet.auto_filter.ref = worksheet.dimensions

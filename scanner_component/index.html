@@ -107,23 +107,6 @@ body {
     50% { top: 95%; }
 }
 
-.focus-ring {
-    position: absolute;
-    z-index: 120;
-    width: 54px;
-    height: 54px;
-    border: 2px solid #facc15;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .15s ease;
-}
-
-.focus-ring.show {
-    opacity: 1;
-}
-
 #status {
     color: white;
     background: #1f2937;
@@ -169,8 +152,6 @@ body {
         <div class="frame">
             <div class="line"></div>
         </div>
-
-        <div id="focusRing" class="focus-ring"></div>
 
     </div>
 
@@ -593,71 +574,6 @@ function showReadyMessage(
 
 
 /* =====================================================
-   TAP TO FOCUS (όπου το υποστηρίζει ο browser/κινητό)
-===================================================== */
-
-async function requestCameraFocus() {
-    try {
-        const video = document.querySelector("#reader video");
-        if (!video || !video.srcObject) return;
-
-        const tracks = video.srcObject.getVideoTracks();
-        if (!tracks || !tracks.length) return;
-
-        const track = tracks[0];
-        const caps = track.getCapabilities ? track.getCapabilities() : {};
-
-        if (caps.focusMode && caps.focusMode.includes("single-shot")) {
-            await track.applyConstraints({
-                advanced: [{ focusMode: "single-shot" }]
-            });
-
-            setTimeout(async function() {
-                try {
-                    if (caps.focusMode.includes("continuous")) {
-                        await track.applyConstraints({
-                            advanced: [{ focusMode: "continuous" }]
-                        });
-                    }
-                } catch (e) {}
-            }, 700);
-        }
-        else if (caps.focusMode && caps.focusMode.includes("continuous")) {
-            await track.applyConstraints({
-                advanced: [{ focusMode: "continuous" }]
-            });
-        }
-    } catch (e) {
-        console.log("Tap focus not supported:", e);
-    }
-}
-
-function installTapToFocus() {
-    const camera = document.querySelector(".camera");
-    const ring = document.getElementById("focusRing");
-    if (!camera || camera.dataset.tapFocusReady === "1") return;
-
-    camera.dataset.tapFocusReady = "1";
-
-    camera.addEventListener("pointerup", async function(event) {
-        const rect = camera.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        if (ring) {
-            ring.style.left = x + "px";
-            ring.style.top = y + "px";
-            ring.classList.add("show");
-            setTimeout(function() {
-                ring.classList.remove("show");
-            }, 700);
-        }
-
-        await requestCameraFocus();
-    });
-}
-
-/* =====================================================
    START CAMERA
 ===================================================== */
 
@@ -798,8 +714,6 @@ async function startCamera(
         scannerRunning =
             true;
 
-        installTapToFocus();
-
 
         showReadyMessage(
             message
@@ -930,8 +844,6 @@ async function startCamera(
 
             scannerRunning =
                 true;
-
-            installTapToFocus();
 
 
             showReadyMessage(

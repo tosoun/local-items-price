@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 
 from io import BytesIO
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import html
 import base64
 
@@ -1838,7 +1839,7 @@ if st.session_state.current_barcode:
 
         else:
 
-            now = datetime.now()
+            now = datetime.now(ZoneInfo("Europe/Athens"))
 
 
             try:
@@ -1852,6 +1853,7 @@ if st.session_state.current_barcode:
                         "barcode": "" if barcode in NO_BARCODE_IDS else barcode,
                         "product": product,
                         "price": float(price),
+                        "created_at": now.isoformat(),
                     }
                 ).execute()
 

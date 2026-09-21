@@ -468,7 +468,14 @@ if "delete_success" not in st.session_state:
 # =========================================================
 if st.session_state.preview_mode:
 
-    st.markdown("## 📊 Προεπισκόπηση Excel")
+    st.markdown(
+        """
+        <div style="font-size:16px; font-weight:700; margin:4px 0 8px 0; line-height:1.2;">
+            📊 Προεπισκόπηση Excel
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     if st.button(
         "⬅️ Επιστροφή στην εφαρμογή",

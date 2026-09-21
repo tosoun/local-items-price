@@ -79,15 +79,15 @@ body {
 .frame {
     position: absolute;
     z-index: 100;
-    width: 78%;
-    height: 95px;
+    width: 94%;
+    height: 90%;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     border: 3px solid #22c55e;
     border-radius: 12px;
     pointer-events: none;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,.22);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,.12);
 }
 
 .line {
@@ -95,25 +95,16 @@ body {
     left: 5%;
     width: 90%;
     height: 3px;
-    background: #22c55e;
-    top: 50%;
+    background: #ef4444;
+    top: 0;
+    box-shadow: 0 0 7px rgba(239,68,68,.8);
     border-radius: 5px;
     animation: scan 1.5s ease-in-out infinite;
 }
 
 @keyframes scan {
-
-    0% {
-        transform: translateY(-32px);
-    }
-
-    50% {
-        transform: translateY(32px);
-    }
-
-    100% {
-        transform: translateY(-32px);
-    }
+    0%, 100% { top: 5%; }
+    50% { top: 95%; }
 }
 
 #status {
@@ -145,14 +136,6 @@ body {
 <body>
 
 <div class="scanner">
-
-    <div class="title">
-        📷 Scanner Barcode
-    </div>
-
-    <div class="subtitle">
-        Βάλε το barcode μέσα στο πράσινο πλαίσιο
-    </div>
 
     <div class="camera">
 
@@ -630,11 +613,6 @@ async function startCamera(
             {
                 fps: 12,
 
-                qrbox: {
-                    width: 260,
-                    height: 95
-                },
-
                 aspectRatio:
                     1.777778,
 
@@ -762,11 +740,6 @@ async function startCamera(
 
                 {
                     fps: 12,
-
-                    qrbox: {
-                        width: 260,
-                        height: 95
-                    },
 
                     formatsToSupport: [
 
